@@ -1,23 +1,22 @@
-# Multi-Cloud Network and Security Group Automation with Terraform and Atlantis
+# Multi-Cloud Atlantis Network Security
 
-This repository creates network and security controls across AWS, Azure, and GCP using Terraform.
-Terraform execution is controlled by Atlantis through GitHub pull requests.
+Enterprise Terraform + Atlantis project for AWS, Azure, and GCP.
 
-## Clouds Covered
-- AWS: VPC, subnets, route table, internet gateway, security group
-- Azure: resource group, virtual network, subnet, network security group
-- GCP: custom VPC, subnet, firewall rules
+## Main URL
+- Atlantis UI: https://atlantis.olalat.xyz
+- GitHub webhook: https://atlantis.olalat.xyz/events
 
-## Workflow
-1. Create a feature branch.
-2. Change Terraform files.
-3. Open a pull request.
-4. Atlantis runs plan.
-5. Review plan and security checks.
-6. Approved engineer comments: atlantis apply -p PROJECT_NAME
-7. Atlantis applies centrally.
+## Main folders
+- `live/aws/network-security`
+- `live/azure/network-security`
+- `live/gcp/network-security`
+- `live/security-managers/*`
+- `policies/opa`
+- `scripts`
 
-## Do Not
-- Do not run terraform apply from laptops.
-- Do not hardcode secrets.
-- Do not expose SSH or RDP to 0.0.0.0/0.
+## Bootstrap
+1. Copy `.env.example` to `.env`
+2. Fill in secrets and cloud IDs
+3. Run `bash scripts/validate-local-static.sh`
+4. Commit and push
+5. Deploy Atlantis VM and point DNS for `atlantis.olalat.xyz`

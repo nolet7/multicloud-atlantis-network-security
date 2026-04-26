@@ -1,0 +1,1118 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise Multi-Cloud Atlantis Project - olalat.xyz</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121935;
+      --panel2:#0f1530;
+      --text:#e8ecf7;
+      --muted:#b8c2de;
+      --accent:#7cc7ff;
+      --accent2:#93f5d0;
+      --warn:#ffd479;
+      --line:#27325d;
+      --code:#0a0f22;
+      --good:#97f0a9;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,#0a0f1f 0%,#101834 100%);
+      color:var(--text);
+      line-height:1.55;
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:28px}
+    .hero{
+      background:linear-gradient(135deg,#12214a 0%,#0d1634 65%,#0e2240 100%);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:28px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    h1,h2,h3,h4{margin-top:0}
+    h1{font-size:34px;line-height:1.2}
+    h2{
+      margin-top:34px;
+      padding-bottom:8px;
+      border-bottom:2px solid var(--line);
+      color:var(--accent2);
+    }
+    h3{margin-top:24px;color:var(--accent)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .card{
+      background:rgba(18,25,53,.9);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:18px;
+      margin-top:14px;
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#18234b;
+      border:1px solid #2b3b73;
+      color:var(--accent2);
+      margin:4px 6px 0 0;
+      font-size:13px;
+    }
+    .seq{counter-reset:step}
+    .step{
+      background:rgba(15,21,48,.95);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:18px;
+      margin:18px 0;
+      position:relative;
+    }
+    .step:before{
+      counter-increment:step;
+      content:counter(step);
+      position:absolute;right:16px;top:16px;
+      width:34px;height:34px;border-radius:50%;
+      background:#1a2856;border:1px solid #3550a1;
+      display:flex;align-items:center;justify-content:center;
+      color:var(--accent2);font-weight:bold;
+    }
+    code, pre{
+      font-family:Consolas,Monaco,monospace;
+    }
+    pre{
+      background:var(--code);
+      color:#dce7ff;
+      border:1px solid #24315f;
+      border-radius:12px;
+      padding:16px;
+      overflow:auto;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:12px;
+      background:rgba(18,25,53,.9);
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    th,td{
+      border:1px solid var(--line);
+      padding:10px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{background:#17234d;color:var(--accent2)}
+    .muted{color:var(--muted)}
+    .good{color:var(--good)}
+    .warn{color:var(--warn)}
+    ul li{margin:8px 0}
+    a{color:#8ad3ff}
+    .toc a{text-decoration:none}
+    .banner{
+      background:#13203f;
+      border-left:4px solid var(--accent2);
+      padding:14px 16px;
+      border-radius:8px;
+      margin-top:16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Enterprise Multi-Cloud Atlantis Project for <span class="good">olalat.xyz</span></h1>
+      <p>This project builds an enterprise-grade Terraform and Atlantis platform for a large multinational company operating across AWS, Azure, and GCP. It provisions cloud networking and security controls through reusable modules, uses a remote state backend at the correct stage, and enforces no-local-apply operations through pull requests and Atlantis.</p>
+      <div>
+        <span class="pill">Domain: atlantis.olalat.xyz</span>
+        <span class="pill">GitHub: nolet7/multicloud-atlantis-network-security</span>
+        <span class="pill">Environment selection: dev / stage / prod</span>
+        <span class="pill">No manual local apply</span>
+      </div>
+      <div class="banner">
+        <strong>Target access URL:</strong> https://atlantis.olalat.xyz<br/>
+        <strong>Webhook endpoint:</strong> https://atlantis.olalat.xyz/events
+      </div>
+    </section>
+
+    <section class="card toc">
+      <h2>Project sequence</h2>
+      <ol>
+        <li><a href="#intro">Program introduction and architecture</a></li>
+        <li><a href="#naming">Enterprise naming and environment model</a></li>
+        <li><a href="#files">Create all files and folders with copy-paste commands</a></li>
+        <li><a href="#state">Remote tfstate setup</a></li>
+        <li><a href="#modules">Reusable Terraform modules</a></li>
+        <li><a href="#live">Live environment root modules</a></li>
+        <li><a href="#atlantis-vm">Deploy GCP VM for Atlantis</a></li>
+        <li><a href="#dns">DNS, TLS, and URL access using olalat.xyz</a></li>
+        <li><a href="#atlantis-config">Atlantis server and repo configuration</a></li>
+        <li><a href="#policies">Enterprise policies and security measures</a></li>
+        <li><a href="#workflow">PR workflow from beginning to end</a></li>
+        <li><a href="#validation">Validation and troubleshooting</a></li>
+      </ol>
+    </section>
+
+    <section id="intro">
+      <h2>1. Program introduction and enterprise architecture</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Business goal</h3>
+          <p>Provide a centralized Infrastructure as Code control plane for multinational branches so that networking and security baselines are consistent in every region and cloud.</p>
+        </div>
+        <div class="card">
+          <h3>What Atlantis does</h3>
+          <p>Atlantis runs <code>terraform plan</code> and <code>terraform apply</code> from pull requests. Engineers do not apply from laptops. Plans are reviewed, approved, and executed centrally.</p>
+        </div>
+        <div class="card">
+          <h3>Cloud scope</h3>
+          <p>AWS creates VPCs and security groups, Azure creates VNets and NSGs, and GCP creates VPCs and firewall rules. A common environment model controls naming and sizing.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>High-level flow</h3>
+<pre>Engineer updates Terraform code
+        ↓
+Pull request opened in GitHub
+        ↓
+Atlantis receives webhook at https://atlantis.olalat.xyz/events
+        ↓
+Atlantis runs terraform plan on changed projects
+        ↓
+OPA / Conftest / tflint / tfsec checks policies
+        ↓
+Reviewers approve
+        ↓
+Authorized approver comments: atlantis apply
+        ↓
+Terraform applies using remote state backend
+        ↓
+Network and security controls deployed consistently</pre>
+      </div>
+    </section>
+
+    <section id="naming">
+      <h2>2. Enterprise naming and environment model</h2>
+      <div class="card">
+        <table>
+          <tr><th>Item</th><th>Pattern</th><th>Example</th></tr>
+          <tr><td>Environment</td><td>dev / stage / prod</td><td>prod</td></tr>
+          <tr><td>Region code</td><td>short cloud region</td><td>use1 / uks / us-central1</td></tr>
+          <tr><td>Business unit</td><td>branch or country code</td><td>ng-lagos / us-florida / br-curitiba</td></tr>
+          <tr><td>Resource prefix</td><td>&lt;org&gt;-&lt;env&gt;-&lt;branch&gt;-&lt;cloud&gt;</td><td>olalat-prod-ng-lagos-aws</td></tr>
+          <tr><td>Atlantis URL</td><td>atlantis.&lt;domain&gt;</td><td>atlantis.olalat.xyz</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Environment selection model</h3>
+        <p>Each live root passes environment-specific values into reusable modules. Atlantis targets each root project separately, so the same module can deploy differently to dev, stage, and prod without changing the module code.</p>
+      </div>
+    </section>
+
+    <section id="files">
+      <h2>3. Copy-and-paste commands to create all files and contents</h2>
+      <div class="card">
+        <p>Run this from a Linux shell, WSL, Git Bash, or a cloud VM. It creates the full starter repository under <code>multicloud-atlantis-network-security</code>.</p>
+<pre>mkdir -p multicloud-atlantis-network-security && cd multicloud-atlantis-network-security
+
+mkdir -p modules/aws-network          modules/azure-network          modules/gcp-network          live/aws/dev/network          live/aws/stage/network          live/aws/prod/network          live/azure/dev/network          live/azure/stage/network          live/azure/prod/network          live/gcp/dev/network          live/gcp/stage/network          live/gcp/prod/network          policies          scripts          .github/workflows          atlantis
+
+cat &gt; README.md &lt;&lt;'EOF'
+# Enterprise Multi-Cloud Atlantis Network Security
+
+This repository provisions network and security controls across AWS, Azure, and GCP using Terraform modules and Atlantis.
+Atlantis is exposed at https://atlantis.olalat.xyz
+Webhook endpoint: https://atlantis.olalat.xyz/events
+EOF
+
+cat &gt; .gitignore &lt;&lt;'EOF'
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+.terraform.lock.hcl
+EOF
+
+cat &gt; atlantis.yaml &lt;&lt;'EOF'
+version: 3
+parallel_plan: true
+parallel_apply: false
+projects:
+  - name: aws-dev-network
+    dir: live/aws/dev/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable]
+  - name: aws-stage-network
+    dir: live/aws/stage/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable]
+  - name: aws-prod-network
+    dir: live/aws/prod/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable, undiverged]
+  - name: azure-dev-network
+    dir: live/azure/dev/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable]
+  - name: azure-stage-network
+    dir: live/azure/stage/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable]
+  - name: azure-prod-network
+    dir: live/azure/prod/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable, undiverged]
+  - name: gcp-dev-network
+    dir: live/gcp/dev/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable]
+  - name: gcp-stage-network
+    dir: live/gcp/stage/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable]
+  - name: gcp-prod-network
+    dir: live/gcp/prod/network
+    autoplan:
+      enabled: true
+      when_modified: ["**/*.tf", "../../../modules/**/*.tf"]
+    apply_requirements: [approved, mergeable, undiverged]
+EOF
+
+cat &gt; modules/aws-network/main.tf &lt;&lt;'EOF'
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~&gt; 5.0"
+    }
+  }
+}
+
+resource "aws_vpc" "this" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = merge(var.tags, {
+    Name        = "${var.name_prefix}-vpc"
+    Environment = var.environment
+  })
+}
+
+resource "aws_security_group" "web" {
+  name        = "${var.name_prefix}-web-sg"
+  description = "Enterprise web security group"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "HTTPS from approved ranges"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = var.allowed_ingress_cidrs
+  }
+
+  egress {
+    description = "Restricted outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = var.allowed_egress_cidrs
+  }
+
+  tags = merge(var.tags, {
+    Name        = "${var.name_prefix}-web-sg"
+    Environment = var.environment
+  })
+}
+
+output "vpc_id" { value = aws_vpc.this.id }
+output "security_group_id" { value = aws_security_group.web.id }
+EOF
+
+cat &gt; modules/aws-network/variables.tf &lt;&lt;'EOF'
+variable "name_prefix" { type = string }
+variable "environment" { type = string }
+variable "vpc_cidr" { type = string }
+variable "allowed_ingress_cidrs" { type = list(string) }
+variable "allowed_egress_cidrs" { type = list(string) }
+variable "tags" { type = map(string) }
+EOF
+
+cat &gt; modules/azure-network/main.tf &lt;&lt;'EOF'
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~&gt; 4.0"
+    }
+  }
+}
+
+resource "azurerm_resource_group" "this" {
+  name     = "${var.name_prefix}-rg"
+  location = var.location
+  tags     = merge(var.tags, { Environment = var.environment })
+}
+
+resource "azurerm_virtual_network" "this" {
+  name                = "${var.name_prefix}-vnet"
+  address_space       = [var.vnet_cidr]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = merge(var.tags, { Environment = var.environment })
+}
+
+resource "azurerm_network_security_group" "web" {
+  name                = "${var.name_prefix}-nsg"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = merge(var.tags, { Environment = var.environment })
+}
+
+resource "azurerm_network_security_rule" "https_in" {
+  name                        = "AllowHttpsInbound"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "443"
+  source_address_prefixes     = var.allowed_ingress_cidrs
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.this.name
+  network_security_group_name = azurerm_network_security_group.web.name
+}
+
+output "resource_group_name" { value = azurerm_resource_group.this.name }
+output "vnet_name" { value = azurerm_virtual_network.this.name }
+output "nsg_name" { value = azurerm_network_security_group.web.name }
+EOF
+
+cat &gt; modules/azure-network/variables.tf &lt;&lt;'EOF'
+variable "name_prefix" { type = string }
+variable "environment" { type = string }
+variable "location" { type = string }
+variable "vnet_cidr" { type = string }
+variable "allowed_ingress_cidrs" { type = list(string) }
+variable "tags" { type = map(string) }
+EOF
+
+cat &gt; modules/gcp-network/main.tf &lt;&lt;'EOF'
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~&gt; 6.0"
+    }
+  }
+}
+
+resource "google_compute_network" "this" {
+  name                    = "${var.name_prefix}-vpc"
+  auto_create_subnetworks = false
+}
+
+resource "google_compute_firewall" "https_in" {
+  name    = "${var.name_prefix}-allow-https"
+  network = google_compute_network.this.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["443"]
+  }
+
+  source_ranges = var.allowed_ingress_cidrs
+  target_tags   = ["web"]
+}
+
+output "network_name" { value = google_compute_network.this.name }
+output "firewall_name" { value = google_compute_firewall.https_in.name }
+EOF
+
+cat &gt; modules/gcp-network/variables.tf &lt;&lt;'EOF'
+variable "name_prefix" { type = string }
+variable "environment" { type = string }
+variable "allowed_ingress_cidrs" { type = list(string) }
+EOF
+
+cat &gt; live/aws/dev/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "s3" {
+    bucket         = "olalat-terraform-state"
+    key            = "aws/dev/network/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "olalat-terraform-locks"
+    encrypt        = true
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+module "network" {
+  source                = "../../../../modules/aws-network"
+  name_prefix           = "olalat-dev-ng-lagos-aws"
+  environment           = "dev"
+  vpc_cidr              = "10.10.0.0/16"
+  allowed_ingress_cidrs = ["10.0.0.0/8","192.168.0.0/16"]
+  allowed_egress_cidrs  = ["10.0.0.0/8","192.168.0.0/16"]
+  tags = {
+    Owner       = "platform-team"
+    CostCenter  = "shared-services"
+    DataClass   = "internal"
+    Branch      = "ng-lagos"
+  }
+}
+EOF
+
+cat &gt; live/aws/stage/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "s3" {
+    bucket         = "olalat-terraform-state"
+    key            = "aws/stage/network/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "olalat-terraform-locks"
+    encrypt        = true
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+module "network" {
+  source                = "../../../../modules/aws-network"
+  name_prefix           = "olalat-stage-ng-lagos-aws"
+  environment           = "stage"
+  vpc_cidr              = "10.20.0.0/16"
+  allowed_ingress_cidrs = ["10.0.0.0/8"]
+  allowed_egress_cidrs  = ["10.0.0.0/8"]
+  tags = {
+    Owner       = "platform-team"
+    CostCenter  = "shared-services"
+    DataClass   = "internal"
+    Branch      = "ng-lagos"
+  }
+}
+EOF
+
+cat &gt; live/aws/prod/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "s3" {
+    bucket         = "olalat-terraform-state"
+    key            = "aws/prod/network/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "olalat-terraform-locks"
+    encrypt        = true
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+module "network" {
+  source                = "../../../../modules/aws-network"
+  name_prefix           = "olalat-prod-ng-lagos-aws"
+  environment           = "prod"
+  vpc_cidr              = "10.30.0.0/16"
+  allowed_ingress_cidrs = ["10.0.0.0/8"]
+  allowed_egress_cidrs  = ["10.0.0.0/8"]
+  tags = {
+    Owner       = "platform-team"
+    CostCenter  = "shared-services"
+    DataClass   = "confidential"
+    Branch      = "ng-lagos"
+  }
+}
+EOF
+
+cat &gt; live/azure/dev/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "olalat-tfstate-rg"
+    storage_account_name = "olalattfstate001"
+    container_name       = "tfstate"
+    key                  = "azure/dev/network/terraform.tfstate"
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
+
+variable "subscription_id" { type = string }
+
+module "network" {
+  source                = "../../../../modules/azure-network"
+  name_prefix           = "olalat-dev-ng-lagos-azure"
+  environment           = "dev"
+  location              = "East US"
+  vnet_cidr             = "10.110.0.0/16"
+  allowed_ingress_cidrs = ["10.0.0.0/8","192.168.0.0/16"]
+  tags = {
+    Owner       = "platform-team"
+    CostCenter  = "shared-services"
+    DataClass   = "internal"
+    Branch      = "ng-lagos"
+  }
+}
+EOF
+
+cat &gt; live/azure/stage/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "olalat-tfstate-rg"
+    storage_account_name = "olalattfstate001"
+    container_name       = "tfstate"
+    key                  = "azure/stage/network/terraform.tfstate"
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
+
+variable "subscription_id" { type = string }
+
+module "network" {
+  source                = "../../../../modules/azure-network"
+  name_prefix           = "olalat-stage-ng-lagos-azure"
+  environment           = "stage"
+  location              = "East US"
+  vnet_cidr             = "10.120.0.0/16"
+  allowed_ingress_cidrs = ["10.0.0.0/8"]
+  tags = {
+    Owner       = "platform-team"
+    CostCenter  = "shared-services"
+    DataClass   = "internal"
+    Branch      = "ng-lagos"
+  }
+}
+EOF
+
+cat &gt; live/azure/prod/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "olalat-tfstate-rg"
+    storage_account_name = "olalattfstate001"
+    container_name       = "tfstate"
+    key                  = "azure/prod/network/terraform.tfstate"
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
+
+variable "subscription_id" { type = string }
+
+module "network" {
+  source                = "../../../../modules/azure-network"
+  name_prefix           = "olalat-prod-ng-lagos-azure"
+  environment           = "prod"
+  location              = "East US"
+  vnet_cidr             = "10.130.0.0/16"
+  allowed_ingress_cidrs = ["10.0.0.0/8"]
+  tags = {
+    Owner       = "platform-team"
+    CostCenter  = "shared-services"
+    DataClass   = "confidential"
+    Branch      = "ng-lagos"
+  }
+}
+EOF
+
+cat &gt; live/gcp/dev/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "gcs" {
+    bucket = "olalat-terraform-state"
+    prefix = "gcp/dev/network"
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
+variable "project_id" { type = string }
+
+module "network" {
+  source                = "../../../../modules/gcp-network"
+  name_prefix           = "olalat-dev-ng-lagos-gcp"
+  environment           = "dev"
+  allowed_ingress_cidrs = ["10.0.0.0/8","192.168.0.0/16"]
+}
+EOF
+
+cat &gt; live/gcp/stage/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "gcs" {
+    bucket = "olalat-terraform-state"
+    prefix = "gcp/stage/network"
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
+variable "project_id" { type = string }
+
+module "network" {
+  source                = "../../../../modules/gcp-network"
+  name_prefix           = "olalat-stage-ng-lagos-gcp"
+  environment           = "stage"
+  allowed_ingress_cidrs = ["10.0.0.0/8"]
+}
+EOF
+
+cat &gt; live/gcp/prod/network/main.tf &lt;&lt;'EOF'
+terraform {
+  backend "gcs" {
+    bucket = "olalat-terraform-state"
+    prefix = "gcp/prod/network"
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
+variable "project_id" { type = string }
+
+module "network" {
+  source                = "../../../../modules/gcp-network"
+  name_prefix           = "olalat-prod-ng-lagos-gcp"
+  environment           = "prod"
+  allowed_ingress_cidrs = ["10.0.0.0/8"]
+}
+EOF
+
+cat &gt; policies/deny_public_ssh.rego &lt;&lt;'EOF'
+package terraform.security
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  rc.type == "aws_security_group"
+  ingress := rc.change.after.ingress[_]
+  ingress.from_port == 22
+  ingress.to_port == 22
+  ingress.cidr_blocks[_] == "0.0.0.0/0"
+  msg := "Public SSH is not allowed in AWS security groups"
+}
+EOF
+
+cat &gt; policies/require_tags.rego &lt;&lt;'EOF'
+package terraform.governance
+
+required_tags := {"Owner", "CostCenter", "DataClass", "Branch"}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  rc.change.after.tags
+  missing := required_tags - object.keys(rc.change.after.tags)
+  count(missing) &gt; 0
+  msg := sprintf("Missing required tags: %v", [missing])
+}
+EOF
+
+cat &gt; .github/workflows/terraform-static-checks.yml &lt;&lt;'EOF'
+name: terraform-static-checks
+on:
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+EOF
+
+cat &gt; atlantis/docker-compose.yml &lt;&lt;'EOF'
+version: "3.8"
+services:
+  atlantis:
+    image: ghcr.io/runatlantis/atlantis:latest
+    container_name: atlantis
+    restart: unless-stopped
+    ports:
+      - "4141:4141"
+    environment:
+      ATLANTIS_REPO_ALLOWLIST: "github.com/nolet7/multicloud-atlantis-network-security"
+      ATLANTIS_GH_USER: "YOUR_GITHUB_USERNAME"
+      ATLANTIS_GH_TOKEN: "YOUR_GITHUB_TOKEN"
+      ATLANTIS_GH_WEBHOOK_SECRET: "YOUR_WEBHOOK_SECRET"
+      ATLANTIS_ATLANTIS_URL: "https://atlantis.olalat.xyz"
+      AWS_REGION: "us-east-1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../:/home/atlantis/repos
+EOF
+
+cat &gt; scripts/bootstrap_repo.sh &lt;&lt;'EOF'
+#!/usr/bin/env bash
+set -e
+git init
+git add .
+git commit -m "Initial enterprise multi-cloud Atlantis bootstrap"
+git branch -M main
+git remote add origin https://github.com/nolet7/multicloud-atlantis-network-security.git
+git push -u origin main
+EOF
+
+chmod +x scripts/bootstrap_repo.sh
+</pre>
+      </div>
+    </section>
+
+    <section id="state">
+      <h2>4. Remote tfstate setup at the right stage</h2>
+      <div class="step seq">
+        <h3>Why tfstate must come early</h3>
+        <p>Remote state is the control plane record of your infrastructure. In enterprise environments, state must be secured before live deployments start. This prevents drift, accidental overwrites, and competing applies.</p>
+      </div>
+      <div class="card">
+        <table>
+          <tr><th>Cloud</th><th>Backend</th><th>Why</th></tr>
+          <tr><td>AWS</td><td>S3 + DynamoDB</td><td>S3 stores encrypted state and DynamoDB handles locking to prevent two applies at once.</td></tr>
+          <tr><td>Azure</td><td>Azure Storage container</td><td>Blob container provides centralized state with Azure RBAC and storage protections.</td></tr>
+          <tr><td>GCP</td><td>GCS bucket</td><td>GCS provides durable remote state with IAM controls and versioning.</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Bootstrap commands</h3>
+<pre># AWS tfstate
+aws s3 mb s3://olalat-terraform-state --region us-east-1
+aws s3api put-bucket-versioning --bucket olalat-terraform-state --versioning-configuration Status=Enabled
+aws dynamodb create-table   --table-name olalat-terraform-locks   --attribute-definitions AttributeName=LockID,AttributeType=S   --key-schema AttributeName=LockID,KeyType=HASH   --billing-mode PAY_PER_REQUEST   --region us-east-1
+
+# Azure tfstate
+az group create --name olalat-tfstate-rg --location eastus
+az storage account create --name olalattfstate001 --resource-group olalat-tfstate-rg --location eastus --sku Standard_LRS
+az storage container create --name tfstate --account-name olalattfstate001
+
+# GCP tfstate
+gcloud storage buckets create gs://olalat-terraform-state --location=us-central1
+gcloud storage buckets update gs://olalat-terraform-state --versioning</pre>
+      </div>
+    </section>
+
+    <section id="modules">
+      <h2>5. Reusable Terraform modules</h2>
+      <div class="card">
+        <p>Modules are the enterprise standardization layer. They hide repeated cloud details, force naming consistency, and make branch rollouts predictable.</p>
+        <ul>
+          <li><strong>modules/aws-network</strong>: VPC and security group baseline</li>
+          <li><strong>modules/azure-network</strong>: Resource group, VNet, NSG baseline</li>
+          <li><strong>modules/gcp-network</strong>: VPC and firewall baseline</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Why modules matter in multinational companies</h3>
+        <ul>
+          <li>Every country branch gets the same security starting point.</li>
+          <li>Policy enforcement becomes easier because resources follow the same shape.</li>
+          <li>Rollouts can expand from one region to many without redesigning everything.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="live">
+      <h2>6. Live environment roots and environment selection</h2>
+      <div class="card">
+        <p>The <code>live/</code> folders are the deployment entry points. This is where you choose <code>dev</code>, <code>stage</code>, or <code>prod</code>. Atlantis maps each folder as a separate project.</p>
+<pre>live/
+├── aws/
+│   ├── dev/network
+│   ├── stage/network
+│   └── prod/network
+├── azure/
+│   ├── dev/network
+│   ├── stage/network
+│   └── prod/network
+└── gcp/
+    ├── dev/network
+    ├── stage/network
+    └── prod/network</pre>
+      </div>
+      <div class="card">
+        <h3>How environment selection works in Atlantis</h3>
+<pre># Run a plan for AWS dev
+atlantis plan -p aws-dev-network
+
+# Run a plan for Azure prod
+atlantis plan -p azure-prod-network
+
+# Apply only after approval
+atlantis apply -p gcp-stage-network</pre>
+      </div>
+    </section>
+
+    <section id="atlantis-vm">
+      <h2>7. Deploy a GCP VM to host Atlantis</h2>
+      <div class="card">
+        <p>Use a dedicated GCP VM for Atlantis so the service is centralized, reachable from GitHub webhooks, and easier to secure behind DNS and TLS.</p>
+      </div>
+      <div class="card">
+        <h3>Create the VM</h3>
+<pre>gcloud compute instances create atlantis-vm   --project YOUR_GCP_PROJECT_ID   --zone us-central1-a   --machine-type e2-standard-2   --subnet default   --tags atlantis,http-server,https-server   --image-family ubuntu-2204-lts   --image-project ubuntu-os-cloud   --boot-disk-size 30GB</pre>
+      </div>
+      <div class="card">
+        <h3>Open firewall for web access</h3>
+<pre>gcloud compute firewall-rules create allow-atlantis-https   --network default   --allow tcp:80,tcp:443,tcp:4141   --target-tags atlantis</pre>
+      </div>
+      <div class="card">
+        <h3>Install Docker and Atlantis</h3>
+<pre>ssh YOUR_USER@ATLANTIS_VM_PUBLIC_IP
+
+sudo apt update
+sudo apt install -y docker.io docker-compose nginx certbot python3-certbot-nginx git
+sudo usermod -aG docker $USER
+newgrp docker
+
+git clone https://github.com/nolet7/multicloud-atlantis-network-security.git
+cd multicloud-atlantis-network-security/atlantis
+docker compose up -d</pre>
+      </div>
+    </section>
+
+    <section id="dns">
+      <h2>8. DNS, TLS, and Atlantis URL access using olalat.xyz</h2>
+      <div class="card">
+        <h3>DNS record to create in Porkbun</h3>
+        <p>Create an <strong>A record</strong> for <code>atlantis.olalat.xyz</code> pointing to the public IP of your GCP Atlantis VM.</p>
+        <table>
+          <tr><th>Type</th><th>Host</th><th>Value</th><th>TTL</th></tr>
+          <tr><td>A</td><td>atlantis</td><td>YOUR_GCP_VM_PUBLIC_IP</td><td>300</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>NGINX reverse proxy</h3>
+<pre>sudo tee /etc/nginx/sites-available/atlantis.olalat.xyz &gt; /dev/null &lt;&lt;'EOF'
+server {
+    listen 80;
+    server_name atlantis.olalat.xyz;
+
+    location / {
+        proxy_pass http://127.0.0.1:4141;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+EOF
+
+sudo ln -s /etc/nginx/sites-available/atlantis.olalat.xyz /etc/nginx/sites-enabled/atlantis.olalat.xyz
+sudo nginx -t
+sudo systemctl restart nginx</pre>
+      </div>
+      <div class="card">
+        <h3>Enable HTTPS with Let's Encrypt</h3>
+<pre>sudo certbot --nginx -d atlantis.olalat.xyz</pre>
+      </div>
+      <div class="card">
+        <h3>How to access Atlantis</h3>
+        <ol>
+          <li>Wait for DNS to propagate.</li>
+          <li>Browse to <strong>https://atlantis.olalat.xyz</strong>.</li>
+          <li>In GitHub, add the webhook URL <strong>https://atlantis.olalat.xyz/events</strong>.</li>
+          <li>Use the same webhook secret in GitHub and Atlantis.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="atlantis-config">
+      <h2>9. Atlantis server and GitHub configuration</h2>
+      <div class="card">
+        <h3>GitHub webhook settings</h3>
+        <table>
+          <tr><th>Field</th><th>Value</th></tr>
+          <tr><td>Payload URL</td><td>https://atlantis.olalat.xyz/events</td></tr>
+          <tr><td>Content type</td><td>application/json</td></tr>
+          <tr><td>Secret</td><td>Same value as <code>ATLANTIS_GH_WEBHOOK_SECRET</code></td></tr>
+          <tr><td>Events</td><td>Pull requests, issue comments, push</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Enterprise repo controls</h3>
+        <ul>
+          <li>Protect the <code>main</code> branch.</li>
+          <li>Require pull request reviews.</li>
+          <li>Require status checks to pass.</li>
+          <li>Use CODEOWNERS for prod directories.</li>
+          <li>Restrict who can comment <code>atlantis apply</code> for production.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="policies">
+      <h2>10. Enterprise policies and security measures</h2>
+      <div class="card">
+        <table>
+          <tr><th>Policy / control</th><th>What it means</th><th>Why it exists</th></tr>
+          <tr><td>No public SSH</td><td>Do not allow port 22 from 0.0.0.0/0</td><td>Prevents direct internet exposure of admin access.</td></tr>
+          <tr><td>Required tags / labels</td><td>Every resource must include owner, cost center, data classification, and branch</td><td>Supports audit, cost allocation, and ownership.</td></tr>
+          <tr><td>Approved-only apply</td><td>Atlantis cannot apply until PR approval exists</td><td>Stops unreviewed changes reaching production.</td></tr>
+          <tr><td>Undiverged prod branch</td><td>Prod branches must be current with main before apply</td><td>Prevents stale branch applies.</td></tr>
+          <tr><td>Remote state with locking</td><td>State is centralized and locked during apply</td><td>Prevents concurrent corruption.</td></tr>
+          <tr><td>TLS for Atlantis URL</td><td>Atlantis web traffic is encrypted</td><td>Protects webhook and session traffic.</td></tr>
+          <tr><td>Least privilege IAM</td><td>Atlantis gets only the permissions it needs</td><td>Limits blast radius.</td></tr>
+          <tr><td>Static code scanning</td><td>Terraform code is checked before apply</td><td>Catches misconfiguration early.</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>AWS IAM policy example for Atlantis</h3>
+<pre>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TerraformStateS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::olalat-terraform-state",
+        "arn:aws:s3:::olalat-terraform-state/*"
+      ]
+    },
+    {
+      "Sid": "TerraformLockTable",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+      ],
+      "Resource": "arn:aws:dynamodb:us-east-1:ACCOUNT_ID:table/olalat-terraform-locks"
+    }
+  ]
+}</pre>
+      </div>
+
+      <div class="card">
+        <h3>How the OPA policies work</h3>
+        <ul>
+          <li><strong>deny_public_ssh.rego</strong> reads the Terraform plan JSON and blocks AWS security groups that expose SSH to the whole internet.</li>
+          <li><strong>require_tags.rego</strong> checks that mandatory governance tags are present on tagged resources.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <h2>11. End-to-end workflow from beginning to end</h2>
+      <div class="step seq">
+        <h3>Step 1: Create the repository</h3>
+<pre>git clone https://github.com/nolet7/multicloud-atlantis-network-security.git
+cd multicloud-atlantis-network-security</pre>
+      </div>
+      <div class="step">
+        <h3>Step 2: Create the files</h3>
+        <p>Run the big copy-paste block from section 3.</p>
+      </div>
+      <div class="step">
+        <h3>Step 3: Bootstrap tfstate backends</h3>
+        <p>Create S3 plus DynamoDB, Azure storage, and GCS bucket before the first real apply.</p>
+      </div>
+      <div class="step">
+        <h3>Step 4: Deploy the Atlantis VM</h3>
+        <p>Create the GCP VM, install Docker, clone the repo, and start Atlantis.</p>
+      </div>
+      <div class="step">
+        <h3>Step 5: Configure DNS and webhook</h3>
+        <p>Create the A record for <code>atlantis.olalat.xyz</code>, enable TLS, then add the GitHub webhook to <code>/events</code>.</p>
+      </div>
+      <div class="step">
+        <h3>Step 6: Push to GitHub</h3>
+<pre>bash scripts/bootstrap_repo.sh</pre>
+      </div>
+      <div class="step">
+        <h3>Step 7: Open a PR</h3>
+<pre>git checkout -b feature/aws-dev-network
+git add .
+git commit -m "Add enterprise multi-cloud network baseline"
+git push origin feature/aws-dev-network</pre>
+      </div>
+      <div class="step">
+        <h3>Step 8: Atlantis runs plan</h3>
+<pre>atlantis plan -p aws-dev-network</pre>
+      </div>
+      <div class="step">
+        <h3>Step 9: Approve and apply</h3>
+<pre>atlantis apply -p aws-dev-network</pre>
+      </div>
+      <div class="step">
+        <h3>Step 10: Repeat for stage and prod</h3>
+        <p>Use the same module and change only the live root and approval level.</p>
+      </div>
+    </section>
+
+    <section id="validation">
+      <h2>12. Validation and troubleshooting</h2>
+      <div class="card">
+        <h3>Quick validation checklist</h3>
+        <ul>
+          <li>Can you open <code>https://atlantis.olalat.xyz</code>?</li>
+          <li>Does GitHub webhook delivery show HTTP 200?</li>
+          <li>Does Atlantis comment on pull requests?</li>
+          <li>Can each environment plan independently?</li>
+          <li>Is remote state created in the right backend per cloud?</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Common issues</h3>
+        <table>
+          <tr><th>Issue</th><th>Likely cause</th><th>Fix</th></tr>
+          <tr><td>Webhook fails</td><td>Wrong secret or DNS/TLS issue</td><td>Confirm webhook secret and test <code>/events</code> path.</td></tr>
+          <tr><td>Atlantis URL not opening</td><td>Firewall or NGINX proxy issue</td><td>Check GCP firewall, nginx config, and Docker port 4141.</td></tr>
+          <tr><td>State lock stuck</td><td>Interrupted run</td><td>Inspect backend lock and use unlock procedures carefully.</td></tr>
+          <tr><td>Prod apply denied</td><td>Missing approval or branch behind main</td><td>Get approval and rebase the PR.</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Final enterprise recommendation</h2>
+      <p>Start with one business unit and one region, validate the module and policy model, then replicate the pattern to other branches. For a multinational rollout, keep modules shared, keep live roots environment-specific, and keep Atlantis centralized behind <strong>atlantis.olalat.xyz</strong>.</p>
+    </section>
+  </div>
+</body>
+</html>

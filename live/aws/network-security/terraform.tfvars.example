@@ -1,8 +1,5 @@
-project_name         = "enterprise-multicloud"
-environment          = "dev"
-owner                = "platform-engineering"
 aws_region           = "us-east-1"
+project_name         = "olalat"
+environment          = "dev"
 vpc_cidr             = "10.10.0.0/16"
-public_subnet_cidr   = "10.10.1.0/24"
-private_subnet_cidr  = "10.10.2.0/24"
-allowed_ingress_cidr = "203.0.113.10/32"
+allowed_https_cidrs  = ["10.0.0.0/8", "192.168.0.0/16"]

@@ -1,38 +1,17 @@
 resource "google_compute_network" "main" {
-  name                    = "${var.vpc_name}-${var.environment}"
+  name                    = "${var.project_name}-${var.environment}-vpc"
   auto_create_subnetworks = false
-  routing_mode            = "REGIONAL"
 }
 
-resource "google_compute_subnetwork" "app" {
-  name          = "snet-${var.project_name}-${var.environment}"
-  ip_cidr_range = var.subnet_cidr
-  region        = var.gcp_region
-  network       = google_compute_network.main.id
-}
-
-resource "google_compute_firewall" "allow_http" {
-  name    = "fw-${var.project_name}-${var.environment}-allow-http"
+resource "google_compute_firewall" "https_in" {
+  name    = "${var.project_name}-${var.environment}-allow-https"
   network = google_compute_network.main.name
 
   allow {
     protocol = "tcp"
-    ports    = ["80"]
+    ports    = ["443"]
   }
 
-  source_ranges = [var.allowed_ingress_cidr]
+  source_ranges = ["10.0.0.0/8", "192.168.0.0/16"]
   target_tags   = ["web"]
-}
-
-resource "google_compute_firewall" "allow_ssh" {
-  name    = "fw-${var.project_name}-${var.environment}-allow-ssh"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = [var.allowed_ingress_cidr]
-  target_tags   = ["admin"]
 }

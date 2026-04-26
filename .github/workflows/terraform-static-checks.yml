@@ -1,0 +1,21 @@
+name: terraform-static-checks
+
+on:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Verify required files exist
+        run: |
+          test -f atlantis.yaml
+          test -f repos.yaml
+          test -f docker-compose.atlantis.yml

@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Cloud Network and Security Group Automation with Terraform and Atlantis</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --card: #ffffff;
+      --muted: #64748b;
+      --text: #0f172a;
+      --accent: #2563eb;
+      --accent2: #16a34a;
+      --danger: #dc2626;
+      --code: #0b1020;
+      --soft: #f1f5f9;
+      --line: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background: #f8fafc;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    header {
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: white;
+      padding: 46px 32px;
+    }
+    header h1 { margin: 0 0 12px; font-size: 38px; line-height: 1.15; }
+    header p { max-width: 1050px; font-size: 18px; color: #dbeafe; }
+    .layout { display: grid; grid-template-columns: 300px 1fr; gap: 28px; max-width: 1500px; margin: 0 auto; padding: 28px; }
+    nav {
+      position: sticky; top: 20px; align-self: start;
+      background: white; border: 1px solid var(--line); border-radius: 16px; padding: 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+    }
+    nav h3 { margin-top: 0; }
+    nav a { display: block; color: #1e40af; text-decoration: none; padding: 7px 4px; border-radius: 8px; font-size: 14px; }
+    nav a:hover { background: #eff6ff; }
+    main { min-width: 0; }
+    section {
+      background: white; border: 1px solid var(--line); border-radius: 18px; padding: 28px; margin-bottom: 24px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+    }
+    h2 { margin-top: 0; color: #0f172a; font-size: 28px; border-bottom: 2px solid #dbeafe; padding-bottom: 10px; }
+    h3 { color: #1e3a8a; margin-top: 28px; }
+    h4 { color: #334155; margin-bottom: 8px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; font-size: 12px; font-weight: 700; margin: 4px 4px 4px 0; }
+    .success { background: #dcfce7; color: #166534; }
+    .warn { background: #fef3c7; color: #92400e; }
+    .danger { background: #fee2e2; color: #991b1b; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card { background: #f8fafc; border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+    .callout { border-left: 5px solid var(--accent); background: #eff6ff; padding: 16px 18px; border-radius: 10px; margin: 16px 0; }
+    .callout.warn { border-left-color: #f59e0b; background: #fffbeb; color: #1f2937; }
+    .callout.danger { border-left-color: var(--danger); background: #fef2f2; color: #1f2937; }
+    pre { background: var(--code); color: #e5e7eb; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid #1f2937; font-size: 13px; }
+    code { font-family: Consolas, Monaco, 'Courier New', monospace; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { border: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #eff6ff; color: #1e3a8a; }
+    .diagram { background: #020617; color: #dbeafe; padding: 20px; border-radius: 16px; overflow-x: auto; }
+    .small { font-size: 13px; color: var(--muted); }
+    footer { text-align: center; color: #64748b; padding: 28px; }
+    @media(max-width: 900px) { .layout { grid-template-columns: 1fr; } nav { position: static; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Multi-Cloud Network and Security Group Automation with Terraform and Atlantis</h1>
+  <p>Enterprise-grade HTML project guide for creating AWS VPC/Security Groups, Azure VNet/NSG, and GCP VPC/Firewall rules through Atlantis pull-request automation. The design avoids manual Terraform plan/apply from laptops and centralizes execution, review, approval, and audit evidence.</p>
+  <div>
+    <span class="badge">Terraform</span>
+    <span class="badge">Atlantis</span>
+    <span class="badge">AWS</span>
+    <span class="badge">Azure</span>
+    <span class="badge">GCP</span>
+    <span class="badge success">No Local Apply</span>
+    <span class="badge warn">Approval-Gated</span>
+  </div>
+</header>
+<div class="layout">
+<nav>
+  <h3>Project Menu</h3>
+  <a href="#overview">1. Project Overview</a>
+  <a href="#architecture">2. Architecture</a>
+  <a href="#flow">3. Atlantis Workflow</a>
+  <a href="#repo">4. Repository Structure</a>
+  <a href="#setup">5. Automated Setup Steps</a>
+  <a href="#bootstrap">6. Bootstrap Script</a>
+  <a href="#atlantis-server">7. Atlantis Server Setup</a>
+  <a href="#gcp-vm-atlantis">8. Deploy GCP VM for Atlantis</a>
+  <a href="#cloud-security-managers">9. Cloud Security Managers</a>
+  <a href="#terraform-code">10. Terraform Code</a>
+  <a href="#atlantis-config">11. Atlantis Config</a>
+  <a href="#security">12. Security Controls</a>
+  <a href="#policy-as-code">13. Policies and Explanations</a>
+  <a href="#github-actions">14. GitHub Actions Checks</a>
+  <a href="#operations">15. Operating Model</a>
+  <a href="#validation">16. Validation</a>
+  <a href="#troubleshooting">17. Troubleshooting</a>
+  <a href="#runbook">18. Runbook</a>
+  <a href="#atlantis-url-access">19. Access Atlantis URL</a>
+  <a href="#enterprise-policy-library">20. Enterprise Policy Library</a>
+  <a href="#security-measures-explained">21. Security Measures Explained</a>
+</nav>
+<main>
+<section id="overview">
+  <h2>1. Project Overview</h2>
+  <p>This project builds a controlled multi-cloud network foundation using Terraform and Atlantis. Atlantis is the execution engine. Engineers do not run <code>terraform apply</code> from personal laptops. Instead, all infrastructure changes are proposed through GitHub pull requests, planned by Atlantis, reviewed by the platform/security team, and applied only after approval.</p>
+  <div class="grid">
+    <div class="card"><h3>AWS</h3><p>Create VPC, public/private subnets, internet gateway, route table, and security group.</p></div>
+    <div class="card"><h3>Azure</h3><p>Create resource group, virtual network, subnet, and network security group with inbound rules.</p></div>
+    <div class="card"><h3>GCP</h3><p>Create custom VPC, subnet, and firewall rules for SSH/HTTP from approved CIDRs.</p></div>
+    <div class="card"><h3>Atlantis</h3><p>Runs plan/apply remotely from PR comments and posts results back into GitHub.</p></div>
+  </div>
+  <div class="callout">
+    <strong>Goal:</strong> A multi-cloud network/security baseline where every change is peer-reviewed, traceable, policy-checked, and applied centrally.
+  </div>
+</section>
+
+<section id="architecture">
+  <h2>2. Architecture</h2>
+  <div class="diagram"><pre>
+Developer Workstation
+  │
+  │ git push feature branch
+  ▼
+GitHub Repository: multicloud-atlantis-network-security
+  │
+  │ Pull Request opened / updated
+  ▼
+GitHub Webhook
+  │
+  │ POST /events
+  ▼
+Atlantis Server
+  │
+  ├── terraform fmt / validate
+  ├── terraform init
+  ├── terraform plan
+  ├── optional: checkov / tflint / conftest
+  └── posts plan output to PR
+  │
+  │ after approval + comment: atlantis apply
+  ▼
+Cloud APIs
+  ├── AWS: VPC + Security Group
+  ├── Azure: VNet + NSG
+  └── GCP: VPC + Firewall Rules
+</pre></div>
+  <h3>Design Principles</h3>
+  <table>
+    <tr><th>Principle</th><th>Implementation</th></tr>
+    <tr><td>No manual Terraform apply</td><td>Apply is triggered only through Atlantis after pull-request approval.</td></tr>
+    <tr><td>Environment isolation</td><td>Separate Terraform root modules for AWS, Azure, and GCP.</td></tr>
+    <tr><td>Least privilege</td><td>Atlantis uses dedicated cloud credentials or identity federation with limited permissions.</td></tr>
+    <tr><td>Auditability</td><td>PR comments contain plan/apply output and approval trail.</td></tr>
+    <tr><td>Policy guardrails</td><td>Checkov/TFLint/GitHub Actions validate code before apply.</td></tr>
+  </table>
+</section>
+
+<section id="flow">
+  <h2>3. Atlantis Workflow</h2>
+  <p>The workflow is intentionally PR-driven:</p>
+  <ol>
+    <li>Engineer creates a feature branch.</li>
+    <li>Engineer edits Terraform code for AWS, Azure, or GCP.</li>
+    <li>Engineer opens a pull request.</li>
+    <li>Atlantis automatically runs <code>terraform plan</code> for changed project directories.</li>
+    <li>Reviewer checks plan output and security scan results.</li>
+    <li>Authorized engineer comments <code>atlantis apply -p project-name</code>.</li>
+    <li>Atlantis applies the reviewed plan centrally.</li>
+  </ol>
+  <div class="callout warn">
+    <strong>Important:</strong> Developers should not run <code>terraform apply</code> locally. Local Terraform can be used only for formatting or static validation if your company allows it.
+  </div>
+</section>
+
+<section id="repo">
+  <h2>4. Repository Structure</h2>
+  <pre><code>multicloud-atlantis-network-security/
+├── README.md
+├── atlantis.yaml
+├── repos.yaml
+├── docker-compose.atlantis.yml
+├── .env.example
+├── .github/
+│   └── workflows/
+│       └── terraform-security-checks.yml
+├── scripts/
+│   ├── bootstrap-project.sh
+│   ├── configure-github-webhook.sh
+│   └── validate-local-static.sh
+├── policies/
+│   └── checkov-skip-guidance.md
+└── live/
+    ├── aws/
+    │   └── network-security/
+    │       ├── versions.tf
+    │       ├── backend.tf.example
+    │       ├── providers.tf
+    │       ├── variables.tf
+    │       ├── terraform.tfvars.example
+    │       ├── main.tf
+    │       └── outputs.tf
+    ├── azure/
+    │   └── network-security/
+    │       ├── versions.tf
+    │       ├── backend.tf.example
+    │       ├── providers.tf
+    │       ├── variables.tf
+    │       ├── terraform.tfvars.example
+    │       ├── main.tf
+    │       └── outputs.tf
+    └── gcp/
+        └── network-security/
+            ├── versions.tf
+            ├── backend.tf.example
+            ├── providers.tf
+            ├── variables.tf
+            ├── terraform.tfvars.example
+            ├── main.tf
+            └── outputs.tf</code></pre>
+</section>
+
+<section id="setup">
+  <h2>5. Automated Setup Steps</h2>
+  <p>The setup is designed so that project files are generated by script. You still need cloud accounts, a GitHub repository, and credentials configured for Atlantis, but no one should manually run Terraform apply.</p>
+  <h3>Required Tools</h3>
+  <table>
+    <tr><th>Tool</th><th>Use</th></tr>
+    <tr><td>Git</td><td>Commit and push Terraform project files.</td></tr>
+    <tr><td>GitHub CLI</td><td>Create repo secrets and webhook configuration from command line.</td></tr>
+    <tr><td>Docker Compose</td><td>Run Atlantis server for lab or small internal setup.</td></tr>
+    <tr><td>Terraform</td><td>Used by Atlantis inside the Atlantis container or server.</td></tr>
+    <tr><td>Cloud credentials</td><td>Dedicated credentials for AWS, Azure, and GCP automation.</td></tr>
+  </table>
+  <h3>High-Level Setup</h3>
+  <ol>
+    <li>Create or select GitHub repository.</li>
+    <li>Run the bootstrap script to generate the project files.</li>
+    <li>Commit and push the generated files.</li>
+    <li>Deploy Atlantis using Docker Compose or Kubernetes.</li>
+    <li>Configure GitHub webhook to send PR events to Atlantis.</li>
+    <li>Create a PR with a Terraform change.</li>
+    <li>Let Atlantis run plan automatically.</li>
+    <li>Approve PR and comment <code>atlantis apply</code>.</li>
+  </ol>
+</section>
+
+<section id="bootstrap">
+  <h2>6. Bootstrap Script</h2>
+  <p>Run this script once from your terminal to create the entire project structure and files. This does not apply Terraform. It only creates the repo content.</p>
+  <pre><code>mkdir -p multicloud-atlantis-network-security
+cd multicloud-atlantis-network-security
+mkdir -p scripts .github/workflows policies \
+  live/aws/network-security \
+  live/azure/network-security \
+  live/gcp/network-security
+
+touch README.md atlantis.yaml repos.yaml docker-compose.atlantis.yml .env.example
+
+touch scripts/bootstrap-project.sh \
+  scripts/configure-github-webhook.sh \
+  scripts/validate-local-static.sh
+
+touch policies/checkov-skip-guidance.md
+
+touch live/aws/network-security/{versions.tf,backend.tf.example,providers.tf,variables.tf,terraform.tfvars.example,main.tf,outputs.tf}
+touch live/azure/network-security/{versions.tf,backend.tf.example,providers.tf,variables.tf,terraform.tfvars.example,main.tf,outputs.tf}
+touch live/gcp/network-security/{versions.tf,backend.tf.example,providers.tf,variables.tf,terraform.tfvars.example,main.tf,outputs.tf}
+
+touch .github/workflows/terraform-security-checks.yml</code></pre>
+
+  <h3>README.md</h3>
+  <pre><code>cat &gt; README.md &lt;&lt;'EOF'
+# Multi-Cloud Network and Security Group Automation with Terraform and Atlantis
+
+This repository creates network and security controls across AWS, Azure, and GCP using Terraform.
+Terraform execution is controlled by Atlantis through GitHub pull requests.
+
+## Clouds Covered
+- AWS: VPC, subnets, route table, internet gateway, security group
+- Azure: resource group, virtual network, subnet, network security group
+- GCP: custom VPC, subnet, firewall rules
+
+## Workflow
+1. Create a feature branch.
+2. Change Terraform files.
+3. Open a pull request.
+4. Atlantis runs plan.
+5. Review plan and security checks.
+6. Approved engineer comments: atlantis apply -p PROJECT_NAME
+7. Atlantis applies centrally.
+
+## Do Not
+- Do not run terraform apply from laptops.
+- Do not hardcode secrets.
+- Do not expose SSH or RDP to 0.0.0.0/0.
+EOF</code></pre>
+</section>
+
+<section id="atlantis-server">
+  <h2>7. Atlantis Server Setup</h2>
+  <p>For a lab or proof of concept, Atlantis can run with Docker Compose. For enterprise, deploy Atlantis on Kubernetes or ECS with private networking, TLS, centralized logging, and secret management.</p>
+
+  <h3>.env.example</h3>
+  <pre><code>cat &gt; .env.example &lt;&lt;'EOF'
+# Atlantis GitHub identity
+ATLANTIS_GH_USER=your-atlantis-bot-user
+ATLANTIS_GH_TOKEN=ghp_replace_with_token_or_secret_manager_injection
+ATLANTIS_GH_WEBHOOK_SECRET=replace_with_long_random_secret
+ATLANTIS_REPO_ALLOWLIST=github.com/your-org/multicloud-atlantis-network-security
+ATLANTIS_ATLANTIS_URL=https://atlantis.yourdomain.com
+
+# AWS credentials for Atlantis. Prefer OIDC/role-based auth in production.
+AWS_ACCESS_KEY_ID=replace
+AWS_SECRET_ACCESS_KEY=replace
+AWS_DEFAULT_REGION=us-east-1
+
+# Azure service principal credentials for Atlantis.
+ARM_CLIENT_ID=replace
+ARM_CLIENT_SECRET=replace
+ARM_SUBSCRIPTION_ID=replace
+ARM_TENANT_ID=replace
+
+# GCP credentials. Prefer Workload Identity Federation in production.
+GOOGLE_CREDENTIALS={"type":"service_account","project_id":"replace"}
+GOOGLE_PROJECT=replace
+GOOGLE_REGION=us-central1
+EOF</code></pre>
+
+  <h3>docker-compose.atlantis.yml</h3>
+  <pre><code>cat &gt; docker-compose.atlantis.yml &lt;&lt'EOF'
+version: "3.9"
+
+services:
+  atlantis:
+    image: ghcr.io/runatlantis/atlantis:latest
+    container_name: atlantis
+    restart: unless-stopped
+    ports:
+      - "4141:4141"
+    env_file:
+      - .env
+    command:
+      - server
+      - --gh-user=${ATLANTIS_GH_USER}
+      - --gh-token=${ATLANTIS_GH_TOKEN}
+      - --gh-webhook-secret=${ATLANTIS_GH_WEBHOOK_SECRET}
+      - --repo-allowlist=${ATLANTIS_REPO_ALLOWLIST}
+      - --atlantis-url=${ATLANTIS_ATLANTIS_URL}
+      - --repo-config=/etc/atlantis/repos.yaml
+      - --log-level=info
+    volumes:
+      - ./repos.yaml:/etc/atlantis/repos.yaml:ro
+      - atlantis-data:/home/atlantis
+
+volumes:
+  atlantis-data:
+EOF</code></pre>
+
+  <h3>Start Atlantis</h3>
+  <pre><code>cp .env.example .env
+# Edit .env using your secret manager or protected deployment process.
+docker compose -f docker-compose.atlantis.yml up -d
+
+docker logs -f atlantis</code></pre>
+
+  <div class="callout danger">
+    <strong>Production warning:</strong> Do not store long-lived cloud secrets in a plain <code>.env</code> file. Use Vault, AWS Secrets Manager, Azure Key Vault, GCP Secret Manager, Kubernetes Secrets with external secret sync, or workload identity federation.
+  </div>
+
+</section>
+
+<section id="gcp-vm-atlantis">
+  <h2>8. Deploy GCP VM for Atlantis</h2>
+  <p>This section deploys a Google Compute Engine VM that runs Atlantis as a Docker container. The goal is still <strong>no local Terraform apply</strong>: local commands only bootstrap the Atlantis runner VM. After that, all AWS, Azure, and GCP network/security changes happen through pull requests and Atlantis.</p>
+
+  <div class="callout">
+    <strong>Why GCP VM?</strong> Atlantis can run on Google Compute Engine. The official Atlantis deployment documentation lists Google Compute Engine as a supported deployment option and the official Atlantis image is available at <code>ghcr.io/runatlantis/atlantis</code>. This guide uses a simple VM bootstrap pattern for a lab and can later be upgraded to a managed instance group or GKE.
+  </div>
+
+  <h3>8.1 Bootstrap design</h3>
+  <pre><code>GitHub PR
+  ↓ webhook
+GCP HTTPS / DNS endpoint
+  ↓
+GCE VM running Docker + Atlantis
+  ↓
+Atlantis pulls Terraform repo
+  ↓
+Atlantis reads cloud credentials from Secret Manager / workload identities
+  ↓
+Terraform creates AWS VPC + SG, Azure VNet + NSG, GCP VPC + firewall</code></pre>
+
+  <h3>8.2 Required GCP APIs</h3>
+  <pre><code>gcloud services enable \
+  compute.googleapis.com \
+  secretmanager.googleapis.com \
+  iam.googleapis.com \
+  cloudresourcemanager.googleapis.com</code></pre>
+
+  <h3>8.3 Create service account for Atlantis VM</h3>
+  <p>This service account is attached to the VM. It can read Atlantis runtime secrets from GCP Secret Manager and write logs. In production, split permissions by environment.</p>
+  <pre><code>export GCP_PROJECT_ID="your-gcp-project-id"
+export GCP_REGION="us-central1"
+export GCP_ZONE="us-central1-a"
+export ATLANTIS_SA="atlantis-vm-sa"
+
+gcloud iam service-accounts create ${ATLANTIS_SA} \
+  --project ${GCP_PROJECT_ID} \
+  --display-name "Atlantis Terraform Automation VM"
+
+gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} \
+  --member="serviceAccount:${ATLANTIS_SA}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+
+gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} \
+  --member="serviceAccount:${ATLANTIS_SA}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/logging.logWriter"</code></pre>
+
+  <h3>8.4 Store Atlantis runtime secrets in GCP Secret Manager</h3>
+  <p>These secrets are read by the VM startup script. Do not put them in GitHub or in the VM image.</p>
+  <pre><code>printf '%s' 'your-atlantis-bot-github-user' | \
+  gcloud secrets create atlantis-gh-user --data-file=- --replication-policy="automatic"
+
+printf '%s' 'ghp_replace_with_github_token' | \
+  gcloud secrets create atlantis-gh-token --data-file=- --replication-policy="automatic"
+
+openssl rand -hex 32 | \
+  gcloud secrets create atlantis-gh-webhook-secret --data-file=- --replication-policy="automatic"
+
+printf '%s' 'github.com/nolet7/multicloud-atlantis-network-security' | \
+  gcloud secrets create atlantis-repo-allowlist --data-file=- --replication-policy="automatic"
+
+printf '%s' 'https://atlantis.example.com' | \
+  gcloud secrets create atlantis-url --data-file=- --replication-policy="automatic"</code></pre>
+
+  <h3>8.5 Store cloud provider credentials</h3>
+  <p>For a lab, credentials can be stored as secrets. For production, prefer AWS IAM Roles Anywhere or OIDC federation, Azure workload identity federation, and GCP Workload Identity Federation instead of long-lived keys.</p>
+  <pre><code># AWS values used by Terraform AWS provider
+printf '%s' 'AKIA_REPLACE' | gcloud secrets create aws-access-key-id --data-file=- --replication-policy="automatic"
+printf '%s' 'replace_aws_secret_key' | gcloud secrets create aws-secret-access-key --data-file=- --replication-policy="automatic"
+printf '%s' 'us-east-1' | gcloud secrets create aws-default-region --data-file=- --replication-policy="automatic"
+
+# Azure service principal values used by Terraform azurerm provider
+printf '%s' 'replace-arm-client-id' | gcloud secrets create arm-client-id --data-file=- --replication-policy="automatic"
+printf '%s' 'replace-arm-client-secret' | gcloud secrets create arm-client-secret --data-file=- --replication-policy="automatic"
+printf '%s' 'replace-arm-subscription-id' | gcloud secrets create arm-subscription-id --data-file=- --replication-policy="automatic"
+printf '%s' 'replace-arm-tenant-id' | gcloud secrets create arm-tenant-id --data-file=- --replication-policy="automatic"
+
+# GCP project context used by Terraform Google provider
+printf '%s' "${GCP_PROJECT_ID}" | gcloud secrets create google-project --data-file=- --replication-policy="automatic"
+printf '%s' "${GCP_REGION}" | gcloud secrets create google-region --data-file=- --replication-policy="automatic"</code></pre>
+
+  <h3>8.6 Create the Atlantis VM startup script</h3>
+  <p>The startup script installs Docker, reads secrets from Secret Manager, writes a locked-down environment file, and starts Atlantis.</p>
+  <pre><code>mkdir -p atlantis-vm
+cat &gt; atlantis-vm/startup-atlantis.sh &lt;&lt'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+apt-get update -y
+apt-get install -y ca-certificates curl gnupg lsb-release google-cloud-cli docker.io
+systemctl enable docker
+systemctl start docker
+
+PROJECT_ID=$(curl -s -H "Metadata-Flavor: Google" \
+  http://metadata.google.internal/computeMetadata/v1/project/project-id)
+
+read_secret() {
+  local name="$1"
+  gcloud secrets versions access latest --secret="$name" --project="$PROJECT_ID"
+}
+
+mkdir -p /opt/atlantis
+cd /opt/atlantis
+
+cat &gt; /opt/atlantis/repos.yaml &lt;&lt'REPOS'
+repos:
+  - id: /.*/
+    branch: /main/
+    apply_requirements: [approved, mergeable, undiverged]
+    allowed_overrides: [workflow, apply_requirements, autoplan]
+    allow_custom_workflows: false
+    delete_source_branch_on_merge: true
+REPOS
+
+cat &gt; /opt/atlantis/atlantis.env &lt;&ltENV
+ATLANTIS_GH_USER=$(read_secret atlantis-gh-user)
+ATLANTIS_GH_TOKEN=$(read_secret atlantis-gh-token)
+ATLANTIS_GH_WEBHOOK_SECRET=$(read_secret atlantis-gh-webhook-secret)
+ATLANTIS_REPO_ALLOWLIST=$(read_secret atlantis-repo-allowlist)
+ATLANTIS_ATLANTIS_URL=$(read_secret atlantis-url)
+AWS_ACCESS_KEY_ID=$(read_secret aws-access-key-id)
+AWS_SECRET_ACCESS_KEY=$(read_secret aws-secret-access-key)
+AWS_DEFAULT_REGION=$(read_secret aws-default-region)
+ARM_CLIENT_ID=$(read_secret arm-client-id)
+ARM_CLIENT_SECRET=$(read_secret arm-client-secret)
+ARM_SUBSCRIPTION_ID=$(read_secret arm-subscription-id)
+ARM_TENANT_ID=$(read_secret arm-tenant-id)
+GOOGLE_PROJECT=$(read_secret google-project)
+GOOGLE_REGION=$(read_secret google-region)
+ENV
+
+chmod 600 /opt/atlantis/atlantis.env
+
+cat &gt; /etc/systemd/system/atlantis.service &lt;&lt'UNIT'
+[Unit]
+Description=Atlantis Terraform PR Automation
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+EnvironmentFile=/opt/atlantis/atlantis.env
+ExecStartPre=-/usr/bin/docker rm -f atlantis
+ExecStart=/usr/bin/docker run --name atlantis \
+  --env-file /opt/atlantis/atlantis.env \
+  -v /opt/atlantis/repos.yaml:/etc/atlantis/repos.yaml:ro \
+  -v atlantis-data:/home/atlantis \
+  -p 4141:4141 \
+  ghcr.io/runatlantis/atlantis:latest \
+  server \
+  --gh-user=$ATLANTIS_GH_USER \
+  --gh-token=$ATLANTIS_GH_TOKEN \
+  --gh-webhook-secret=$ATLANTIS_GH_WEBHOOK_SECRET \
+  --repo-allowlist=$ATLANTIS_REPO_ALLOWLIST \
+  --atlantis-url=$ATLANTIS_ATLANTIS_URL \
+  --repo-config=/etc/atlantis/repos.yaml \
+  --log-level=info
+ExecStop=/usr/bin/docker stop atlantis
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable atlantis
+systemctl start atlantis
+EOF
+chmod +x atlantis-vm/startup-atlantis.sh</code></pre>
+
+  <h3>8.7 Create firewall rule and VM</h3>
+  <p>For a private enterprise deployment, put the VM behind a load balancer, IAP, VPN, or private ingress. For a lab, expose only port <code>4141</code> from approved GitHub/webhook or admin CIDRs.</p>
+  <pre><code>export ADMIN_CIDR="YOUR_PUBLIC_IP/32"
+
+gcloud compute firewall-rules create allow-atlantis-4141 \
+  --project ${GCP_PROJECT_ID} \
+  --network default \
+  --allow tcp:4141 \
+  --source-ranges ${ADMIN_CIDR} \
+  --target-tags atlantis-server \
+  --description "Allow approved admin/webhook access to Atlantis"
+
+gcloud compute instances create atlantis-vm \
+  --project ${GCP_PROJECT_ID} \
+  --zone ${GCP_ZONE} \
+  --machine-type e2-medium \
+  --boot-disk-size 30GB \
+  --image-family debian-12 \
+  --image-project debian-cloud \
+  --tags atlantis-server \
+  --service-account ${ATLANTIS_SA}@${GCP_PROJECT_ID}.iam.gserviceaccount.com \
+  --scopes cloud-platform \
+  --metadata-from-file startup-script=atlantis-vm/startup-atlantis.sh</code></pre>
+
+  <h3>8.8 Verify Atlantis VM</h3>
+  <pre><code>gcloud compute ssh atlantis-vm --zone ${GCP_ZONE} --command "sudo systemctl status atlantis --no-pager"
+gcloud compute ssh atlantis-vm --zone ${GCP_ZONE} --command "sudo docker logs --tail=100 atlantis"</code></pre>
+</section>
+
+<section id="cloud-security-managers">
+  <h2>9. Cloud Security Managers</h2>
+  <p>This project uses each cloud provider's native secret/security manager to avoid placing sensitive values in Terraform files, GitHub Actions logs, or Atlantis configuration files.</p>
+
+  <table>
+    <tr><th>Cloud</th><th>Service</th><th>Used for</th><th>Why it matters</th></tr>
+    <tr><td>GCP</td><td>Secret Manager</td><td>Atlantis GitHub token, webhook secret, cloud provider credentials, environment values</td><td>Centralized secret storage with IAM access control and versioned secrets.</td></tr>
+    <tr><td>Azure</td><td>Key Vault</td><td>Azure automation secrets, certificates, Terraform environment values</td><td>Managed secret, key, and certificate storage integrated with Azure RBAC and private endpoints.</td></tr>
+    <tr><td>AWS</td><td>AWS Secrets Manager</td><td>AWS automation secrets, database/network automation variables, cross-account credentials where required</td><td>Managed secret storage with rotation support and IAM policies.</td></tr>
+  </table>
+
+  <h3>9.1 Add cloud security manager Terraform modules</h3>
+  <pre><code>mkdir -p live/security-managers/{aws,azure,gcp}</code></pre>
+
+  <h3>9.2 AWS Secrets Manager</h3>
+  <pre><code>cat &gt; live/security-managers/aws/main.tf &lt;&lt'EOF'
+terraform {
+  required_version = ">= 1.6.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+resource "aws_secretsmanager_secret" "network_automation" {
+  name                    = "multicloud/network-automation"
+  description             = "Secrets used by Atlantis for AWS network automation"
+  recovery_window_in_days = 7
+
+  tags = {
+    Owner       = "platform-engineering"
+    Environment = var.environment
+    ManagedBy   = "terraform-atlantis"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "placeholder" {
+  secret_id = aws_secretsmanager_secret.network_automation.id
+  secret_string = jsonencode({
+    example = "replace-through-secure-process-not-git"
+  })
+}
+EOF
+
+cat &gt; live/security-managers/aws/variables.tf &lt;&lt'EOF'
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"
+}
+
+variable "environment" {
+  type    = string
+  default = "shared"
+}
+EOF</code></pre>
+
+  <h3>9.3 Azure Key Vault</h3>
+  <pre><code>cat &gt; live/security-managers/azure/main.tf &lt;&lt'EOF'
+terraform {
+  required_version = ">= 1.6.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.100"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_resource_group" "security" {
+  name     = "rg-multicloud-security-${var.environment}"
+  location = var.location
+}
+
+resource "azurerm_key_vault" "automation" {
+  name                       = var.key_vault_name
+  location                   = azurerm_resource_group.security.location
+  resource_group_name        = azurerm_resource_group.security.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = "standard"
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = true
+  enable_rbac_authorization  = true
+
+  tags = {
+    Owner       = "platform-engineering"
+    Environment = var.environment
+    ManagedBy   = "terraform-atlantis"
+  }
+}
+EOF
+
+cat &gt; live/security-managers/azure/variables.tf &lt;&lt'EOF'
+variable "location" {
+  type    = string
+  default = "eastus"
+}
+
+variable "environment" {
+  type    = string
+  default = "shared"
+}
+
+variable "key_vault_name" {
+  type        = string
+  description = "Globally unique Key Vault name, for example kv-mc-atlantis-001"
+}
+EOF</code></pre>
+
+  <h3>9.4 GCP Secret Manager</h3>
+  <pre><code>cat &gt; live/security-managers/gcp/main.tf &lt;&lt'EOF'
+terraform {
+  required_version = ">= 1.6.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+resource "google_secret_manager_secret" "network_automation" {
+  secret_id = "multicloud-network-automation"
+
+  replication {
+    auto {}
+  }
+
+  labels = {
+    owner       = "platform-engineering"
+    environment = var.environment
+    managed_by  = "terraform-atlantis"
+  }
+}
+
+resource "google_secret_manager_secret_version" "placeholder" {
+  secret      = google_secret_manager_secret.network_automation.id
+  secret_data = jsonencode({ example = "replace-through-secure-process-not-git" })
+}
+EOF
+
+cat &gt; live/security-managers/gcp/variables.tf &lt;&lt'EOF'
+variable "project_id" {
+  type = string
+}
+
+variable "region" {
+  type    = string
+  default = "us-central1"
+}
+
+variable "environment" {
+  type    = string
+  default = "shared"
+}
+EOF</code></pre>
+
+  <div class="callout warn">
+    <strong>Important:</strong> Terraform state can contain secret values when you create secret versions directly. For real production secrets, create the secret container with Terraform, then inject secret values through a controlled runtime process, CI secret sync, Vault, or cloud-native rotation. Keep state encrypted and access-restricted.
+  </div>
+</section>
+
+<section id="terraform-code">
+  <h2>10. Terraform Code</h2>
+  <p>Each cloud is separated into its own root module. This keeps plans smaller and allows Atlantis to plan/apply only the cloud project affected by the PR.</p>
+
+  <h3>AWS: VPC and Security Group</h3>
+  <h4>live/aws/network-security/versions.tf</h4>
+  <pre><code>cat &gt; live/aws/network-security/versions.tf &lt;&lt'EOF'
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+EOF</code></pre>
+
+  <h4>live/aws/network-security/providers.tf</h4>
+  <pre><code>cat &gt; live/aws/network-security/providers.tf &lt;&lt'EOF'
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = var.project_name
+      Environment = var.environment
+      ManagedBy   = "Terraform-Atlantis"
+      Owner       = var.owner
+    }
+  }
+}
+EOF</code></pre>
+
+  <h4>live/aws/network-security/variables.tf</h4>
+  <pre><code>cat &gt; live/aws/network-security/variables.tf &lt;&lt'EOF'
+variable "project_name" { type = string }
+variable "environment"  { type = string }
+variable "owner"        { type = string }
+variable "aws_region"   { type = string }
+variable "vpc_cidr"     { type = string }
+variable "public_subnet_cidr"  { type = string }
+variable "private_subnet_cidr" { type = string }
+variable "allowed_ingress_cidr" { type = string }
+EOF</code></pre>
+
+  <h4>live/aws/network-security/main.tf</h4>
+  <pre><code>cat &gt; live/aws/network-security/main.tf &lt;&lt'EOF'
+resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-vpc"
+  }
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-igw"
+  }
+}
+
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-public-subnet"
+    Tier = "public"
+  }
+}
+
+resource "aws_subnet" "private" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.private_subnet_cidr
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-private-subnet"
+    Tier = "private"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-public-rt"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_security_group" "web" {
+  name        = "${var.project_name}-${var.environment}-web-sg"
+  description = "Controlled web and SSH access"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "HTTP from approved CIDR"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_ingress_cidr]
+  }
+
+  ingress {
+    description = "SSH from approved CIDR only"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_ingress_cidr]
+  }
+
+  egress {
+    description = "Outbound internet access"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-web-sg"
+  }
+}
+EOF</code></pre>
+
+  <h4>live/aws/network-security/terraform.tfvars.example</h4>
+  <pre><code>cat &gt; live/aws/network-security/terraform.tfvars.example &lt;&lt'EOF'
+project_name         = "enterprise-multicloud"
+environment          = "dev"
+owner                = "platform-engineering"
+aws_region           = "us-east-1"
+vpc_cidr             = "10.10.0.0/16"
+public_subnet_cidr   = "10.10.1.0/24"
+private_subnet_cidr  = "10.10.2.0/24"
+allowed_ingress_cidr = "203.0.113.10/32"
+EOF</code></pre>
+
+  <h4>live/aws/network-security/outputs.tf</h4>
+  <pre><code>cat &gt; live/aws/network-security/outputs.tf &lt;&lt'EOF'
+output "aws_vpc_id" {
+  value = aws_vpc.main.id
+}
+
+output "aws_security_group_id" {
+  value = aws_security_group.web.id
+}
+EOF</code></pre>
+
+  <h3>Azure: VNet and NSG</h3>
+  <h4>live/azure/network-security/versions.tf</h4>
+  <pre><code>cat &gt; live/azure/network-security/versions.tf &lt;&lt'EOF'
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+EOF</code></pre>
+
+  <h4>live/azure/network-security/providers.tf</h4>
+  <pre><code>cat &gt; live/azure/network-security/providers.tf &lt;&lt'EOF'
+provider "azurerm" {
+  features {}
+}
+EOF</code></pre>
+
+  <h4>live/azure/network-security/variables.tf</h4>
+  <pre><code>cat &gt; live/azure/network-security/variables.tf &lt;&lt'EOF'
+variable "project_name" { type = string }
+variable "environment"  { type = string }
+variable "owner"        { type = string }
+variable "location"     { type = string }
+variable "vnet_cidr"    { type = string }
+variable "subnet_cidr"  { type = string }
+variable "allowed_ingress_cidr" { type = string }
+EOF</code></pre>
+
+  <h4>live/azure/network-security/main.tf</h4>
+  <pre><code>cat &gt; live/azure/network-security/main.tf &lt;&lt'EOF'
+resource "azurerm_resource_group" "main" {
+  name     = "rg-${var.project_name}-${var.environment}"
+  location = var.location
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    ManagedBy   = "Terraform-Atlantis"
+    Owner       = var.owner
+  }
+}
+
+resource "azurerm_virtual_network" "main" {
+  name                = "vnet-${var.project_name}-${var.environment}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  address_space       = [var.vnet_cidr]
+
+  tags = azurerm_resource_group.main.tags
+}
+
+resource "azurerm_subnet" "app" {
+  name                 = "snet-app-${var.environment}"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = [var.subnet_cidr]
+}
+
+resource "azurerm_network_security_group" "app" {
+  name                = "nsg-app-${var.project_name}-${var.environment}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  security_rule {
+    name                       = "Allow-HTTP-Approved-CIDR"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = var.allowed_ingress_cidr
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "Allow-SSH-Approved-CIDR"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = var.allowed_ingress_cidr
+    destination_address_prefix = "*"
+  }
+
+  tags = azurerm_resource_group.main.tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "app" {
+  subnet_id                 = azurerm_subnet.app.id
+  network_security_group_id = azurerm_network_security_group.app.id
+}
+EOF</code></pre>
+
+  <h4>live/azure/network-security/terraform.tfvars.example</h4>
+  <pre><code>cat &gt; live/azure/network-security/terraform.tfvars.example &lt;&lt'EOF'
+project_name         = "enterprise-multicloud"
+environment          = "dev"
+owner                = "platform-engineering"
+location             = "eastus"
+vnet_cidr            = "10.20.0.0/16"
+subnet_cidr          = "10.20.1.0/24"
+allowed_ingress_cidr = "203.0.113.10/32"
+EOF</code></pre>
+
+  <h4>live/azure/network-security/outputs.tf</h4>
+  <pre><code>cat &gt; live/azure/network-security/outputs.tf &lt;&lt'EOF'
+output "azure_resource_group_name" {
+  value = azurerm_resource_group.main.name
+}
+
+output "azure_vnet_name" {
+  value = azurerm_virtual_network.main.name
+}
+
+output "azure_nsg_name" {
+  value = azurerm_network_security_group.app.name
+}
+EOF</code></pre>
+
+  <h3>GCP: VPC and Firewall Rules</h3>
+  <h4>live/gcp/network-security/versions.tf</h4>
+  <pre><code>cat &gt; live/gcp/network-security/versions.tf &lt;&lt'EOF'
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.0"
+    }
+  }
+}
+EOF</code></pre>
+
+  <h4>live/gcp/network-security/providers.tf</h4>
+  <pre><code>cat &gt; live/gcp/network-security/providers.tf &lt;&lt'EOF'
+provider "google" {
+  project = var.gcp_project_id
+  region  = var.gcp_region
+}
+EOF</code></pre>
+
+  <h4>live/gcp/network-security/variables.tf</h4>
+  <pre><code>cat &gt; live/gcp/network-security/variables.tf &lt;&lt'EOF'
+variable "project_name" { type = string }
+variable "environment"  { type = string }
+variable "owner"        { type = string }
+variable "gcp_project_id" { type = string }
+variable "gcp_region"     { type = string }
+variable "vpc_name"       { type = string }
+variable "subnet_cidr"    { type = string }
+variable "allowed_ingress_cidr" { type = string }
+EOF</code></pre>
+
+  <h4>live/gcp/network-security/main.tf</h4>
+  <pre><code>cat &gt; live/gcp/network-security/main.tf &lt;&lt'EOF'
+resource "google_compute_network" "main" {
+  name                    = "${var.vpc_name}-${var.environment}"
+  auto_create_subnetworks = false
+  routing_mode            = "REGIONAL"
+}
+
+resource "google_compute_subnetwork" "app" {
+  name          = "snet-${var.project_name}-${var.environment}"
+  ip_cidr_range = var.subnet_cidr
+  region        = var.gcp_region
+  network       = google_compute_network.main.id
+}
+
+resource "google_compute_firewall" "allow_http" {
+  name    = "fw-${var.project_name}-${var.environment}-allow-http"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = [var.allowed_ingress_cidr]
+  target_tags   = ["web"]
+}
+
+resource "google_compute_firewall" "allow_ssh" {
+  name    = "fw-${var.project_name}-${var.environment}-allow-ssh"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = [var.allowed_ingress_cidr]
+  target_tags   = ["admin"]
+}
+EOF</code></pre>
+
+  <h4>live/gcp/network-security/terraform.tfvars.example</h4>
+  <pre><code>cat &gt; live/gcp/network-security/terraform.tfvars.example &lt;&lt'EOF'
+project_name         = "enterprise-multicloud"
+environment          = "dev"
+owner                = "platform-engineering"
+gcp_project_id       = "replace-with-gcp-project-id"
+gcp_region           = "us-central1"
+vpc_name             = "vpc-enterprise-multicloud"
+subnet_cidr          = "10.30.1.0/24"
+allowed_ingress_cidr = "203.0.113.10/32"
+EOF</code></pre>
+
+  <h4>live/gcp/network-security/outputs.tf</h4>
+  <pre><code>cat &gt; live/gcp/network-security/outputs.tf &lt;&lt'EOF'
+output "gcp_vpc_name" {
+  value = google_compute_network.main.name
+}
+
+output "gcp_subnet_name" {
+  value = google_compute_subnetwork.app.name
+}
+EOF</code></pre>
+</section>
+
+<section id="atlantis-config">
+  <h2>11. Atlantis Configuration</h2>
+  <h3>atlantis.yaml</h3>
+  <pre><code>cat &gt; atlantis.yaml &lt;&lt'EOF'
+version: 3
+parallel_plan: true
+parallel_apply: false
+
+projects:
+  - name: aws-network-security
+    dir: live/aws/network-security
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "*.tfvars.example"
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged
+    workflow: secure
+
+  - name: azure-network-security
+    dir: live/azure/network-security
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "*.tfvars.example"
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged
+    workflow: secure
+
+  - name: gcp-network-security
+    dir: live/gcp/network-security
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "*.tfvars.example"
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged
+    workflow: secure
+
+workflows:
+  secure:
+    plan:
+      steps:
+        - run: terraform fmt -check -recursive
+        - init
+        - run: terraform validate
+        - plan
+    apply:
+      steps:
+        - apply
+EOF</code></pre>
+
+  <h3>repos.yaml: Server-Side Guardrail</h3>
+  <pre><code>cat &gt; repos.yaml &lt;&lt'EOF'
+repos:
+  - id: github.com/your-org/multicloud-atlantis-network-security
+    branch: /main/
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged
+    allowed_overrides:
+      - workflow
+      - apply_requirements
+      - autoplan
+    allow_custom_workflows: false
+EOF</code></pre>
+
+  <div class="callout">
+    <strong>Why this matters:</strong> <code>allow_custom_workflows: false</code> helps prevent a pull request from introducing arbitrary shell commands into the Atlantis workflow.
+  </div>
+</section>
+
+<section id="security">
+  <h2>12. Security Controls</h2>
+  <table>
+    <tr><th>Risk</th><th>Control</th></tr>
+    <tr><td>Unauthorized production apply</td><td>Use Atlantis apply requirements: approved, mergeable, undiverged.</td></tr>
+    <tr><td>Hardcoded credentials</td><td>Use environment variables, secret managers, OIDC, or workload identity federation.</td></tr>
+    <tr><td>Open SSH/RDP</td><td>Restrict ingress CIDR. Add Checkov/TFLint policy to block 0.0.0.0/0 on admin ports.</td></tr>
+    <tr><td>Unreviewed network changes</td><td>Require CODEOWNERS review from platform and security teams.</td></tr>
+    <tr><td>State corruption</td><td>Use remote backend with locking for each cloud root module.</td></tr>
+    <tr><td>Privilege sprawl</td><td>Use separate cloud automation identities per environment and cloud.</td></tr>
+  </table>
+
+  <h3>Recommended CODEOWNERS</h3>
+  <pre><code>mkdir -p .github
+cat &gt; .github/CODEOWNERS &lt;&lt'EOF'
+# Platform team owns Terraform code
+/live/ @your-org/platform-engineering
+
+# Security team reviews network/security changes
+/live/aws/network-security/ @your-org/security-engineering
+/live/azure/network-security/ @your-org/security-engineering
+/live/gcp/network-security/ @your-org/security-engineering
+
+# Atlantis config requires platform ownership
+/atlantis.yaml @your-org/platform-engineering
+/repos.yaml @your-org/platform-engineering
+EOF</code></pre>
+
+</section>
+
+<section id="policy-as-code">
+  <h2>13. Policies and Explanations</h2>
+  <p>Policies protect the platform from unsafe network changes before Atlantis applies them. The policies below combine cloud IAM, GitHub approval rules, Atlantis apply requirements, and OPA/Rego policy-as-code checks.</p>
+
+  <h3>13.1 Atlantis apply policy</h3>
+  <table>
+    <tr><th>Policy</th><th>Meaning</th><th>Why it exists</th></tr>
+    <tr><td><code>approved</code></td><td>The pull request must be approved.</td><td>Prevents one engineer from applying infrastructure without review.</td></tr>
+    <tr><td><code>mergeable</code></td><td>The PR must have no merge conflicts and must satisfy branch rules.</td><td>Prevents applying code that cannot cleanly merge into main.</td></tr>
+    <tr><td><code>undiverged</code></td><td>The branch must be up to date with the base branch.</td><td>Prevents applying a stale plan after main has changed.</td></tr>
+    <tr><td><code>allow_custom_workflows: false</code></td><td>PR authors cannot inject arbitrary custom Atlantis commands.</td><td>Reduces risk of command execution through pull request edits.</td></tr>
+  </table>
+
+  <h3>13.2 Cloud IAM policy model</h3>
+  <table>
+    <tr><th>Identity</th><th>Permissions</th><th>Explanation</th></tr>
+    <tr><td>Atlantis GCP VM service account</td><td>Read selected GCP Secret Manager secrets, write logs</td><td>The VM can start Atlantis and load runtime secrets without storing them on disk permanently.</td></tr>
+    <tr><td>AWS Atlantis automation user/role</td><td>Create/read/update/delete VPC, subnets, route tables, security groups, Secrets Manager secrets</td><td>Limits AWS Terraform actions to network and secret-manager scope instead of full admin.</td></tr>
+    <tr><td>Azure Atlantis service principal</td><td>Network Contributor + Key Vault scoped permissions</td><td>Allows VNet/NSG and Key Vault automation while avoiding full subscription owner access.</td></tr>
+    <tr><td>GCP Terraform automation identity</td><td>Compute Network Admin + Secret Manager Admin scoped to project/folder</td><td>Allows GCP VPC/firewall and secret container automation.</td></tr>
+  </table>
+
+  <h3>13.3 Example AWS least-privilege IAM policy</h3>
+  <pre><code>cat &gt; policies/aws-atlantis-network-policy.json &lt;&lt'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowNetworkAutomation",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateVpc",
+        "ec2:DeleteVpc",
+        "ec2:Describe*",
+        "ec2:CreateSubnet",
+        "ec2:DeleteSubnet",
+        "ec2:CreateInternetGateway",
+        "ec2:AttachInternetGateway",
+        "ec2:DetachInternetGateway",
+        "ec2:DeleteInternetGateway",
+        "ec2:CreateRouteTable",
+        "ec2:CreateRoute",
+        "ec2:AssociateRouteTable",
+        "ec2:DisassociateRouteTable",
+        "ec2:DeleteRouteTable",
+        "ec2:CreateSecurityGroup",
+        "ec2:DeleteSecurityGroup",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:RevokeSecurityGroupIngress",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:RevokeSecurityGroupEgress",
+        "ec2:CreateTags",
+        "ec2:DeleteTags"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowSecretsManagerForAutomationSecrets",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:TagResource"
+      ],
+      "Resource": "arn:aws:secretsmanager:*:*:secret:multicloud/*"
+    }
+  ]
+}
+EOF</code></pre>
+  <p><strong>Explanation:</strong> This policy allows Atlantis to manage AWS network resources and only secrets under the <code>multicloud/</code> naming path. In a stricter production model, split read and write permissions, scope by account, and add permission boundaries.</p>
+
+  <h3>13.4 Example OPA/Rego policy: block open admin ports</h3>
+  <pre><code>mkdir -p policies/opa
+cat &gt; policies/opa/network_security.rego &lt;&lt'EOF'
+package terraform.network_security
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "aws_security_group_rule"
+  resource.change.after.type == "ingress"
+  resource.change.after.from_port <= 22
+  resource.change.after.to_port >= 22
+  resource.change.after.cidr_blocks[_] == "0.0.0.0/0"
+  msg := "AWS security group must not expose SSH port 22 to 0.0.0.0/0"
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "azurerm_network_security_rule"
+  resource.change.after.direction == "Inbound"
+  resource.change.after.destination_port_range == "22"
+  resource.change.after.source_address_prefix == "*"
+  msg := "Azure NSG must not expose SSH port 22 to all sources"
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "google_compute_firewall"
+  resource.change.after.source_ranges[_] == "0.0.0.0/0"
+  allow := resource.change.after.allow[_]
+  allow.ports[_] == "22"
+  msg := "GCP firewall must not expose SSH port 22 to 0.0.0.0/0"
+}
+EOF</code></pre>
+  <p><strong>Explanation:</strong> This policy checks Terraform plan JSON before apply. It blocks public SSH exposure across AWS, Azure, and GCP.</p>
+
+  <h3>13.5 Example OPA/Rego policy: require enterprise tags/labels</h3>
+  <pre><code>cat &gt; policies/opa/required_metadata.rego &lt;&lt'EOF'
+package terraform.required_metadata
+
+required_tags := {"Owner", "Environment", "ManagedBy"}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  startswith(resource.type, "aws_")
+  missing := required_tags - {tag | resource.change.after.tags[tag]}
+  count(missing) > 0
+  msg := sprintf("AWS resource %s is missing required tags: %v", [resource.address, missing])
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  startswith(resource.type, "azurerm_")
+  missing := required_tags - {tag | resource.change.after.tags[tag]}
+  count(missing) > 0
+  msg := sprintf("Azure resource %s is missing required tags: %v", [resource.address, missing])
+}
+
+required_labels := {"owner", "environment", "managed_by"}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  startswith(resource.type, "google_")
+  missing := required_labels - {label | resource.change.after.labels[label]}
+  count(missing) > 0
+  msg := sprintf("GCP resource %s is missing required labels: %v", [resource.address, missing])
+}
+EOF</code></pre>
+  <p><strong>Explanation:</strong> This policy enforces cost ownership, environment classification, and audit traceability. AWS/Azure use tags; GCP commonly uses labels.</p>
+
+  <h3>13.6 Add policy check workflow to Atlantis</h3>
+  <pre><code>cat &gt;&gt; repos.yaml &lt;&lt'EOF'
+workflows:
+  policy_checked:
+    plan:
+      steps:
+        - init
+        - plan
+        - show
+        - run: terraform show -json $PLANFILE > $PLANFILE.json
+        - run: conftest test $PLANFILE.json --policy $REPO_REL_DIR/../../../policies/opa
+    apply:
+      steps:
+        - apply
+EOF</code></pre>
+  <p><strong>Explanation:</strong> Atlantis runs <code>terraform plan</code>, converts the plan to JSON, and runs Conftest/OPA policies before apply is allowed. The policy blocks unsafe network rules and missing metadata.</p>
+</section>
+
+<section id="github-actions">
+  <h2>14. GitHub Actions Checks</h2>
+  <p>Atlantis will run Terraform plan/apply. GitHub Actions can still run static checks before merge.</p>
+  <pre><code>cat &gt; .github/workflows/terraform-security-checks.yml &lt;&lt'EOF'
+name: Terraform Static Security Checks
+
+on:
+  pull_request:
+    paths:
+      - 'live/**'
+      - 'atlantis.yaml'
+      - 'repos.yaml'
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: Install TFLint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: Run TFLint
+        run: |
+          for dir in live/aws/network-security live/azure/network-security live/gcp/network-security; do
+            echo "Running TFLint in $dir"
+            cd "$GITHUB_WORKSPACE/$dir"
+            tflint --init
+            tflint
+          done
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: live
+          quiet: false
+          soft_fail: false
+EOF</code></pre>
+</section>
+
+<section id="operations">
+  <h2>15. Operating Model</h2>
+  <h3>Developer Flow</h3>
+  <pre><code>git checkout -b feature/add-multicloud-network-baseline
+cp live/aws/network-security/terraform.tfvars.example live/aws/network-security/terraform.tfvars
+cp live/azure/network-security/terraform.tfvars.example live/azure/network-security/terraform.tfvars
+cp live/gcp/network-security/terraform.tfvars.example live/gcp/network-security/terraform.tfvars
+
+git add .
+git commit -m "Add multi-cloud network security baseline"
+git push origin feature/add-multicloud-network-baseline</code></pre>
+
+  <h3>Pull Request Commands</h3>
+  <table>
+    <tr><th>Command</th><th>Purpose</th></tr>
+    <tr><td><code>atlantis plan</code></td><td>Plan all changed Atlantis projects.</td></tr>
+    <tr><td><code>atlantis plan -p aws-network-security</code></td><td>Plan only AWS network/security.</td></tr>
+    <tr><td><code>atlantis plan -p azure-network-security</code></td><td>Plan only Azure network/security.</td></tr>
+    <tr><td><code>atlantis plan -p gcp-network-security</code></td><td>Plan only GCP network/security.</td></tr>
+    <tr><td><code>atlantis apply -p aws-network-security</code></td><td>Apply AWS after approval.</td></tr>
+    <tr><td><code>atlantis apply -p azure-network-security</code></td><td>Apply Azure after approval.</td></tr>
+    <tr><td><code>atlantis apply -p gcp-network-security</code></td><td>Apply GCP after approval.</td></tr>
+    <tr><td><code>atlantis unlock</code></td><td>Unlock a stuck Atlantis project lock.</td></tr>
+  </table>
+</section>
+
+<section id="validation">
+  <h2>16. Validation</h2>
+  <h3>AWS Validation</h3>
+  <pre><code>aws ec2 describe-vpcs --filters "Name=tag:ManagedBy,Values=Terraform-Atlantis"
+aws ec2 describe-security-groups --filters "Name=tag:ManagedBy,Values=Terraform-Atlantis"</code></pre>
+
+  <h3>Azure Validation</h3>
+  <pre><code>az group list --query "[?tags.ManagedBy=='Terraform-Atlantis']"
+az network nsg list --query "[?tags.ManagedBy=='Terraform-Atlantis']"</code></pre>
+
+  <h3>GCP Validation</h3>
+  <pre><code>gcloud compute networks list --filter="name~vpc-enterprise-multicloud"
+gcloud compute firewall-rules list --filter="name~fw-enterprise-multicloud"</code></pre>
+
+  <h3>Atlantis Validation</h3>
+  <pre><code>curl -I https://atlantis.yourdomain.com
+# Expected: HTTP 200/302 depending on your ingress/reverse proxy</code></pre>
+</section>
+
+<section id="troubleshooting">
+  <h2>17. Troubleshooting</h2>
+  <table>
+    <tr><th>Issue</th><th>Likely Cause</th><th>Fix</th></tr>
+    <tr><td>Atlantis does not comment on PR</td><td>Webhook not configured or cannot reach Atlantis URL</td><td>Check GitHub webhook deliveries and confirm <code>/events</code> endpoint is reachable.</td></tr>
+    <tr><td>Plan fails with provider auth error</td><td>Missing AWS/Azure/GCP environment variables</td><td>Confirm Atlantis runtime has the correct credentials injected.</td></tr>
+    <tr><td>Apply blocked</td><td>PR is not approved, mergeable, or undiverged</td><td>Approve PR, resolve conflicts, update branch with main.</td></tr>
+    <tr><td>State lock error</td><td>Previous run failed or remote backend lock still active</td><td>Inspect Atlantis locks first; use cloud backend unlock only after confirming no active apply.</td></tr>
+    <tr><td>Checkov blocks PR</td><td>Security rule violates baseline</td><td>Fix CIDR, encryption, tagging, or network exposure issue.</td></tr>
+  </table>
+</section>
+
+<section id="runbook">
+  <h2>18. Runbook</h2>
+  <h3>First-Time Build</h3>
+  <ol>
+    <li>Generate repository files using the bootstrap commands.</li>
+    <li>Replace placeholder org/repo values in <code>repos.yaml</code> and <code>docker-compose.atlantis.yml</code>.</li>
+    <li>Configure cloud automation credentials securely.</li>
+    <li>Start Atlantis.</li>
+    <li>Create GitHub webhook to <code>https://atlantis.yourdomain.com/events</code>.</li>
+    <li>Open PR with Terraform changes.</li>
+    <li>Review Atlantis plan.</li>
+    <li>Approve and apply through PR comment.</li>
+  </ol>
+
+  <h3>Production Hardening Checklist</h3>
+  <ul>
+    <li>Use TLS for Atlantis.</li>
+    <li>Place Atlantis behind private ingress or authenticated reverse proxy where possible.</li>
+    <li>Use workload identity or short-lived credentials instead of static secrets.</li>
+    <li>Separate AWS/Azure/GCP credentials by environment.</li>
+    <li>Enable GitHub branch protection and required CODEOWNERS approval.</li>
+    <li>Use remote Terraform backend with locking.</li>
+    <li>Stream Atlantis logs to central observability platform.</li>
+    <li>Backup Terraform state and enable object versioning.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Final result:</strong> Engineers only submit pull requests. Atlantis plans, reviewers approve, and Atlantis applies. This gives your organization a repeatable, auditable, no-local-apply multi-cloud network automation workflow.
+  </div>
+</section>
+<section id="repo-env-module-update" class="section">
+  <h2>Update: GitHub Repo Alignment + Environment-Selectable Terraform Modules</h2>
+  <p><strong>Repository:</strong> <code>https://github.com/nolet7/multicloud-atlantis-network-security.git</code></p>
+  <p>This update converts the project into a reusable module-based structure where Atlantis selects the deployment environment through PR project names. Engineers do not run <code>terraform plan</code> or <code>terraform apply</code> locally. They select the environment by commenting one of the Atlantis project commands in the pull request.</p>
+
+  <div class="callout">
+    <strong>Environment selection model:</strong><br>
+    <code>atlantis plan -p multicloud-dev</code> deploys the dev network/security baseline.<br>
+    <code>atlantis plan -p multicloud-stage</code> deploys the stage network/security baseline.<br>
+    <code>atlantis plan -p multicloud-prod</code> deploys the prod network/security baseline after approval requirements pass.
+  </div>
+
+  <h3>Recommended Updated Repository Structure</h3>
+  <pre><code>multicloud-atlantis-network-security/
+├── README.md
+├── atlantis.yaml
+├── repos.yaml
+├── .github/
+│   └── workflows/
+│       ├── static-security-checks.yml
+│       └── repo-bootstrap-validation.yml
+├── bootstrap/
+│   ├── gcp-atlantis-vm.tf
+│   ├── startup-atlantis.sh
+│   └── variables.tf
+├── modules/
+│   ├── aws-network-security/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── azure-network-security/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── gcp-network-security/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── environment-baseline/
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+├── envs/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── backend.tf
+│   │   ├── providers.tf
+│   │   └── terraform.tfvars
+│   ├── stage/
+│   │   ├── main.tf
+│   │   ├── backend.tf
+│   │   ├── providers.tf
+│   │   └── terraform.tfvars
+│   └── prod/
+│       ├── main.tf
+│       ├── backend.tf
+│       ├── providers.tf
+│       └── terraform.tfvars
+└── policies/
+    ├── deny-public-ssh.rego
+    ├── require-tags.rego
+    ├── allowed-environments.rego
+    ├── restrict-prod-cidr.rego
+    └── require-secret-manager.rego</code></pre>
+
+  <h3>One-Time Repository Bootstrap Commands</h3>
+  <p>Run this once from your workstation only to populate the empty GitHub repository. After that, all infrastructure changes should go through pull requests and Atlantis.</p>
+  <pre><code>git clone https://github.com/nolet7/multicloud-atlantis-network-security.git
+cd multicloud-atlantis-network-security
+
+mkdir -p .github/workflows \
+  bootstrap \
+  modules/aws-network-security \
+  modules/azure-network-security \
+  modules/gcp-network-security \
+  modules/environment-baseline \
+  envs/dev envs/stage envs/prod \
+  policies
+
+touch README.md atlantis.yaml repos.yaml
+
+git add .
+git commit -m "Initialize multi-cloud Atlantis network security project"
+git push origin main</code></pre>
+
+  <h3>Atlantis Project Selection by Environment</h3>
+  <p>The following <code>atlantis.yaml</code> creates three separate Atlantis projects. Each project points to a different environment folder and uses the same reusable modules.</p>
+  <pre><code>version: 3
+parallel_plan: true
+parallel_apply: false
+
+projects:
+  - name: multicloud-dev
+    dir: envs/dev
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "../../modules/**/*.tf"
+        - "../../policies/**/*.rego"
+    apply_requirements:
+      - mergeable
+
+  - name: multicloud-stage
+    dir: envs/stage
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "../../modules/**/*.tf"
+        - "../../policies/**/*.rego"
+    apply_requirements:
+      - approved
+      - mergeable
+
+  - name: multicloud-prod
+    dir: envs/prod
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "../../modules/**/*.tf"
+        - "../../policies/**/*.rego"
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged</code></pre>
+
+  <h3>Server-Side Atlantis Repo Policy</h3>
+  <p>This <code>repos.yaml</code> should live on the Atlantis server, not inside the application repository if you want central enterprise control.</p>
+  <pre><code>repos:
+  - id: github.com/nolet7/multicloud-atlantis-network-security
+    branch: /main/
+    apply_requirements:
+      - approved
+      - mergeable
+    allowed_overrides:
+      - workflow
+      - apply_requirements
+      - autoplan
+    allow_custom_workflows: false
+    delete_source_branch_on_merge: false</code></pre>
+
+  <h3>Environment Baseline Module</h3>
+  <p>This module is the control point. It calls the AWS, Azure, and GCP modules using the selected environment values.</p>
+  <pre><code>// modules/environment-baseline/main.tf
+module "aws" {
+  source = "../aws-network-security"
+
+  environment      = var.environment
+  aws_region       = var.aws_region
+  vpc_cidr         = var.aws_vpc_cidr
+  public_subnets   = var.aws_public_subnets
+  private_subnets  = var.aws_private_subnets
+  allowed_ssh_cidr = var.allowed_admin_cidr
+  tags             = var.tags
+}
+
+module "azure" {
+  source = "../azure-network-security"
+
+  environment      = var.environment
+  location         = var.azure_location
+  resource_group   = var.azure_resource_group
+  vnet_cidr        = var.azure_vnet_cidr
+  subnet_cidrs     = var.azure_subnet_cidrs
+  allowed_ssh_cidr = var.allowed_admin_cidr
+  tags             = var.tags
+}
+
+module "gcp" {
+  source = "../gcp-network-security"
+
+  environment      = var.environment
+  project_id       = var.gcp_project_id
+  region           = var.gcp_region
+  network_name     = "multicloud-${var.environment}-vpc"
+  subnet_cidr      = var.gcp_subnet_cidr
+  allowed_ssh_cidr = var.allowed_admin_cidr
+  labels           = var.labels
+}</code></pre>
+
+  <pre><code>// modules/environment-baseline/variables.tf
+variable "environment" {
+  description = "Deployment environment. Allowed values: dev, stage, prod."
+  type        = string
+
+  validation {
+    condition     = contains(["dev", "stage", "prod"], var.environment)
+    error_message = "Environment must be dev, stage, or prod."
+  }
+}
+
+variable "allowed_admin_cidr" {
+  description = "Approved admin CIDR allowed to reach SSH/RDP where required. Never use 0.0.0.0/0."
+  type        = string
+}
+
+variable "aws_region" { type = string }
+variable "aws_vpc_cidr" { type = string }
+variable "aws_public_subnets" { type = list(string) }
+variable "aws_private_subnets" { type = list(string) }
+
+variable "azure_location" { type = string }
+variable "azure_resource_group" { type = string }
+variable "azure_vnet_cidr" { type = string }
+variable "azure_subnet_cidrs" { type = list(string) }
+
+variable "gcp_project_id" { type = string }
+variable "gcp_region" { type = string }
+variable "gcp_subnet_cidr" { type = string }
+
+variable "tags" {
+  type = map(string)
+}
+
+variable "labels" {
+  type = map(string)
+}</code></pre>
+
+  <h3>Dev Environment Root Module</h3>
+  <pre><code>// envs/dev/main.tf
+module "environment" {
+  source = "../../modules/environment-baseline"
+
+  environment          = var.environment
+  allowed_admin_cidr   = var.allowed_admin_cidr
+
+  aws_region           = var.aws_region
+  aws_vpc_cidr         = var.aws_vpc_cidr
+  aws_public_subnets   = var.aws_public_subnets
+  aws_private_subnets  = var.aws_private_subnets
+
+  azure_location       = var.azure_location
+  azure_resource_group = var.azure_resource_group
+  azure_vnet_cidr      = var.azure_vnet_cidr
+  azure_subnet_cidrs   = var.azure_subnet_cidrs
+
+  gcp_project_id       = var.gcp_project_id
+  gcp_region           = var.gcp_region
+  gcp_subnet_cidr      = var.gcp_subnet_cidr
+
+  tags                 = var.tags
+  labels               = var.labels
+}</code></pre>
+
+  <pre><code>// envs/dev/terraform.tfvars
+environment = "dev"
+allowed_admin_cidr = "203.0.113.10/32"
+
+aws_region          = "us-east-1"
+aws_vpc_cidr        = "10.10.0.0/16"
+aws_public_subnets  = ["10.10.1.0/24", "10.10.2.0/24"]
+aws_private_subnets = ["10.10.11.0/24", "10.10.12.0/24"]
+
+azure_location       = "eastus"
+azure_resource_group = "rg-multicloud-dev-network"
+azure_vnet_cidr      = "10.20.0.0/16"
+azure_subnet_cidrs   = ["10.20.1.0/24", "10.20.11.0/24"]
+
+gcp_project_id  = "CHANGE_ME_GCP_PROJECT_ID"
+gcp_region      = "us-central1"
+gcp_subnet_cidr = "10.30.1.0/24"
+
+tags = {
+  Environment = "dev"
+  Owner       = "platform-engineering"
+  Project     = "multicloud-atlantis-network-security"
+  ManagedBy   = "atlantis"
+}
+
+labels = {
+  environment = "dev"
+  owner       = "platform-engineering"
+  project     = "multicloud-atlantis-network-security"
+  managed_by  = "atlantis"
+}</code></pre>
+
+  <h3>Stage and Prod Environment Differences</h3>
+  <p>Copy the same root files from <code>envs/dev</code> into <code>envs/stage</code> and <code>envs/prod</code>, then change only the <code>terraform.tfvars</code> values.</p>
+  <pre><code>// envs/stage/terraform.tfvars
+environment = "stage"
+allowed_admin_cidr = "203.0.113.20/32"
+aws_vpc_cidr        = "10.110.0.0/16"
+azure_vnet_cidr     = "10.120.0.0/16"
+gcp_subnet_cidr     = "10.130.1.0/24"
+
+// envs/prod/terraform.tfvars
+environment = "prod"
+allowed_admin_cidr = "203.0.113.30/32"
+aws_vpc_cidr        = "10.210.0.0/16"
+azure_vnet_cidr     = "10.220.0.0/16"
+gcp_subnet_cidr     = "10.230.1.0/24"</code></pre>
+
+  <h3>AWS Network and Security Module</h3>
+  <pre><code>// modules/aws-network-security/main.tf
+resource "aws_vpc" "this" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = merge(var.tags, {
+    Name = "multicloud-${var.environment}-aws-vpc"
+  })
+}
+
+resource "aws_security_group" "admin" {
+  name        = "multicloud-${var.environment}-admin-sg"
+  description = "Admin access restricted to approved enterprise CIDR"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "SSH from approved admin CIDR only"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.allowed_ssh_cidr]
+  }
+
+  egress {
+    description = "Allow outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, {
+    Name = "multicloud-${var.environment}-admin-sg"
+  })
+}</code></pre>
+
+  <h3>Azure Network and NSG Module</h3>
+  <pre><code>// modules/azure-network-security/main.tf
+resource "azurerm_resource_group" "this" {
+  name     = var.resource_group
+  location = var.location
+  tags     = var.tags
+}
+
+resource "azurerm_virtual_network" "this" {
+  name                = "multicloud-${var.environment}-azure-vnet"
+  address_space       = [var.vnet_cidr]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = var.tags
+}
+
+resource "azurerm_network_security_group" "admin" {
+  name                = "multicloud-${var.environment}-admin-nsg"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = var.tags
+
+  security_rule {
+    name                       = "Allow-SSH-From-Approved-CIDR"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = var.allowed_ssh_cidr
+    destination_address_prefix = "*"
+  }
+}</code></pre>
+
+  <h3>GCP Network and Firewall Module</h3>
+  <pre><code>// modules/gcp-network-security/main.tf
+resource "google_compute_network" "this" {
+  name                    = var.network_name
+  auto_create_subnetworks = false
+  project                 = var.project_id
+}
+
+resource "google_compute_subnetwork" "this" {
+  name          = "multicloud-${var.environment}-subnet"
+  ip_cidr_range = var.subnet_cidr
+  region        = var.region
+  network       = google_compute_network.this.id
+  project       = var.project_id
+}
+
+resource "google_compute_firewall" "admin" {
+  name    = "multicloud-${var.environment}-allow-admin-ssh"
+  network = google_compute_network.this.name
+  project = var.project_id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = [var.allowed_ssh_cidr]
+  target_tags   = ["admin-access"]
+}
+
+resource "google_compute_firewall" "deny_all_default" {
+  name      = "multicloud-${var.environment}-deny-ingress-default"
+  network   = google_compute_network.this.name
+  project   = var.project_id
+  direction = "INGRESS"
+  priority  = 65534
+
+  deny {
+    protocol = "all"
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}</code></pre>
+
+  <h3>Providers for Each Environment</h3>
+  <pre><code>// envs/dev/providers.tf
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+provider "azurerm" {
+  features {}
+}
+
+provider "google" {
+  project = var.gcp_project_id
+  region  = var.gcp_region
+}</code></pre>
+
+  <h3>Backend Example</h3>
+  <p>Use separate state keys per environment. This keeps dev, stage, and prod isolated.</p>
+  <pre><code>// envs/dev/backend.tf
+terraform {
+  backend "gcs" {
+    bucket = "CHANGE_ME_tf_state_bucket"
+    prefix = "multicloud-atlantis-network-security/dev"
+  }
+}
+
+// envs/stage/backend.tf
+terraform {
+  backend "gcs" {
+    bucket = "CHANGE_ME_tf_state_bucket"
+    prefix = "multicloud-atlantis-network-security/stage"
+  }
+}
+
+// envs/prod/backend.tf
+terraform {
+  backend "gcs" {
+    bucket = "CHANGE_ME_tf_state_bucket"
+    prefix = "multicloud-atlantis-network-security/prod"
+  }
+}</code></pre>
+
+  <h3>How to Select an Environment During Deployment</h3>
+  <table>
+    <thead>
+      <tr><th>Environment</th><th>Atlantis PR Command</th><th>Approval Control</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Dev</td><td><code>atlantis plan -p multicloud-dev</code><br><code>atlantis apply -p multicloud-dev</code></td><td>Mergeable PR required</td></tr>
+      <tr><td>Stage</td><td><code>atlantis plan -p multicloud-stage</code><br><code>atlantis apply -p multicloud-stage</code></td><td>PR approval and mergeable PR required</td></tr>
+      <tr><td>Prod</td><td><code>atlantis plan -p multicloud-prod</code><br><code>atlantis apply -p multicloud-prod</code></td><td>Approved, mergeable, and undiverged PR required</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cloud Security Managers Used by the Project</h3>
+  <table>
+    <thead>
+      <tr><th>Cloud</th><th>Security Manager</th><th>What It Stores</th><th>Why It Matters</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GCP</td><td>Secret Manager</td><td>GitHub webhook secret, Atlantis GitHub token, Atlantis webhook secret, cloud bootstrap variables</td><td>Keeps Atlantis runtime secrets out of startup scripts and GitHub</td></tr>
+      <tr><td>AWS</td><td>AWS Secrets Manager</td><td>Optional AWS role external ID, integration secrets, break-glass metadata</td><td>Centralizes AWS automation secrets with IAM and audit logs</td></tr>
+      <tr><td>Azure</td><td>Azure Key Vault</td><td>Azure service principal credentials or federated identity metadata</td><td>Provides controlled access, audit logging, and secret rotation model</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Policy: Deny Public SSH</h3>
+  <p><strong>Purpose:</strong> Blocks AWS security groups, Azure NSGs, and GCP firewall rules that expose SSH to the internet. This protects the project from accidental administrative exposure.</p>
+  <pre><code># policies/deny-public-ssh.rego
+package terraform.security
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "aws_security_group"
+  ingress := resource.change.after.ingress[_]
+  ingress.from_port == 22
+  ingress.to_port == 22
+  ingress.cidr_blocks[_] == "0.0.0.0/0"
+  msg := sprintf("AWS security group %s exposes SSH to the internet", [resource.address])
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "azurerm_network_security_group"
+  rule := resource.change.after.security_rule[_]
+  rule.destination_port_range == "22"
+  rule.source_address_prefix == "*"
+  msg := sprintf("Azure NSG %s exposes SSH to the internet", [resource.address])
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "google_compute_firewall"
+  rule := resource.change.after
+  rule.allow[_].ports[_] == "22"
+  rule.source_ranges[_] == "0.0.0.0/0"
+  msg := sprintf("GCP firewall %s exposes SSH to the internet", [resource.address])
+}</code></pre>
+
+  <h3>Policy: Require Tags and Labels</h3>
+  <p><strong>Purpose:</strong> Requires every cloud resource to carry ownership, environment, project, and management metadata. This helps cost allocation, incident response, CMDB mapping, and audit reviews.</p>
+  <pre><code># policies/require-tags.rego
+package terraform.security
+
+required_tags := {"Environment", "Owner", "Project", "ManagedBy"}
+required_labels := {"environment", "owner", "project", "managed_by"}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  startswith(resource.type, "aws_")
+  missing := required_tags - {k | resource.change.after.tags[k]}
+  count(missing) > 0
+  msg := sprintf("AWS resource %s is missing required tags: %v", [resource.address, missing])
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  startswith(resource.type, "azurerm_")
+  missing := required_tags - {k | resource.change.after.tags[k]}
+  count(missing) > 0
+  msg := sprintf("Azure resource %s is missing required tags: %v", [resource.address, missing])
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  startswith(resource.type, "google_")
+  missing := required_labels - {k | resource.change.after.labels[k]}
+  count(missing) > 0
+  msg := sprintf("GCP resource %s is missing required labels: %v", [resource.address, missing])
+}</code></pre>
+
+  <h3>Policy: Allowed Environments Only</h3>
+  <p><strong>Purpose:</strong> Prevents engineers from creating unapproved environments such as <code>test123</code>, <code>temporary</code>, or <code>personal</code>. This keeps state, cost, and access control predictable.</p>
+  <pre><code># policies/allowed-environments.rego
+package terraform.security
+
+allowed := {"dev", "stage", "prod"}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  env := resource.change.after.tags.Environment
+  env != ""
+  not allowed[env]
+  msg := sprintf("Resource %s uses unsupported environment tag: %s", [resource.address, env])
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  env := resource.change.after.labels.environment
+  env != ""
+  not allowed[env]
+  msg := sprintf("Resource %s uses unsupported environment label: %s", [resource.address, env])
+}</code></pre>
+
+  <h3>Policy: Restrict Production CIDR Size</h3>
+  <p><strong>Purpose:</strong> Prevents overly broad production networks. Production networks should be intentionally sized and reviewed.</p>
+  <pre><code># policies/restrict-prod-cidr.rego
+package terraform.security
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "aws_vpc"
+  resource.change.after.tags.Environment == "prod"
+  resource.change.after.cidr_block == "10.0.0.0/8"
+  msg := sprintf("Production AWS VPC %s uses an overly broad CIDR", [resource.address])
+}
+
+deny[msg] {
+  resource := input.resource_changes[_]
+  resource.type == "azurerm_virtual_network"
+  resource.change.after.tags.Environment == "prod"
+  resource.change.after.address_space[_] == "10.0.0.0/8"
+  msg := sprintf("Production Azure VNet %s uses an overly broad CIDR", [resource.address])
+}</code></pre>
+
+  <h3>Policy: Require Secret Manager Usage</h3>
+  <p><strong>Purpose:</strong> Blocks plain-text secret-like variables in Terraform. Runtime credentials must come from GCP Secret Manager, AWS Secrets Manager, Azure Key Vault, OIDC, or workload identity federation.</p>
+  <pre><code># policies/require-secret-manager.rego
+package terraform.security
+
+deny[msg] {
+  variable := input.configuration.root_module.variables[_]
+  contains(lower(variable.name), "password")
+  variable.default
+  msg := sprintf("Variable %s appears to contain a hardcoded password default", [variable.name])
+}
+
+deny[msg] {
+  variable := input.configuration.root_module.variables[_]
+  contains(lower(variable.name), "secret")
+  variable.default
+  msg := sprintf("Variable %s appears to contain a hardcoded secret default", [variable.name])
+}</code></pre>
+
+  <h3>Atlantis Policy Workflow</h3>
+  <p>This custom workflow converts the Terraform plan into JSON and runs OPA/Conftest before apply.</p>
+  <pre><code>workflows:
+  policy_checked:
+    plan:
+      steps:
+        - init
+        - plan
+        - run: terraform show -json $PLANFILE > tfplan.json
+        - run: conftest test tfplan.json --policy ../../policies
+    apply:
+      steps:
+        - apply</code></pre>
+
+  <h3>GCP Atlantis VM: Runtime Secret Access Policy</h3>
+  <p>The GCP VM that runs Atlantis should use a dedicated service account. That service account receives only the permissions needed to read Atlantis secrets and write Terraform state.</p>
+  <pre><code>resource "google_service_account" "atlantis" {
+  account_id   = "atlantis-runner"
+  display_name = "Atlantis Terraform Runner"
+}
+
+resource "google_project_iam_member" "secret_accessor" {
+  project = var.gcp_project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.atlantis.email}"
+}
+
+resource "google_project_iam_member" "state_admin" {
+  project = var.gcp_project_id
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${google_service_account.atlantis.email}"
+}
+
+resource "google_project_iam_member" "network_admin" {
+  project = var.gcp_project_id
+  role    = "roles/compute.networkAdmin"
+  member  = "serviceAccount:${google_service_account.atlantis.email}"
+}</code></pre>
+
+  <h3>How the Full Deployment Works</h3>
+  <ol>
+    <li>Engineer updates <code>envs/dev/terraform.tfvars</code>, <code>envs/stage/terraform.tfvars</code>, <code>envs/prod/terraform.tfvars</code>, or a shared module.</li>
+    <li>Engineer opens a GitHub pull request.</li>
+    <li>Atlantis detects the changed environment folder and runs a plan.</li>
+    <li>OPA policies check for public SSH, missing tags, invalid environments, broad production CIDRs, and hardcoded secrets.</li>
+    <li>Reviewers approve the PR.</li>
+    <li>Authorized engineer comments <code>atlantis apply -p multicloud-dev</code>, <code>multicloud-stage</code>, or <code>multicloud-prod</code>.</li>
+    <li>Atlantis applies the approved plan from the GCP VM using secrets from Secret Manager and cloud identities.</li>
+  </ol>
+
+  <h3>Validation Commands After Atlantis Apply</h3>
+  <pre><code># AWS validation
+aws ec2 describe-vpcs --filters "Name=tag:Project,Values=multicloud-atlantis-network-security"
+aws ec2 describe-security-groups --filters "Name=group-name,Values=multicloud-*-admin-sg"
+
+# Azure validation
+az network vnet list --query "[?contains(name, 'multicloud')].{name:name, location:location}" -o table
+az network nsg list --query "[?contains(name, 'multicloud')].{name:name, resourceGroup:resourceGroup}" -o table
+
+# GCP validation
+gcloud compute networks list --filter="name~multicloud"
+gcloud compute firewall-rules list --filter="name~multicloud"</code></pre>
+
+  <h3>Recommended Branch Protection for Production</h3>
+  <ul>
+    <li>Require pull request review before merging.</li>
+    <li>Require status checks from GitHub Actions security scan.</li>
+    <li>Require branch to be up to date before merge.</li>
+    <li>Restrict who can push to <code>main</code>.</li>
+    <li>Allow only senior platform engineers to run <code>atlantis apply -p multicloud-prod</code>.</li>
+  </ul>
+</section>
+
+<section id="atlantis-url-access">
+  <h2>19. How to Access the Atlantis URL</h2>
+  <p>This section explains how users, GitHub, and administrators access Atlantis after the GCP VM deployment. Atlantis must be reachable by GitHub webhooks, but the admin UI should be protected behind HTTPS, firewall rules, and optionally an identity-aware proxy, VPN, or Cloudflare Access.</p>
+
+  <h3>Recommended Production Access Pattern</h3>
+  <div class="diagram"><pre>
+GitHub Webhook
+  │ HTTPS POST https://atlantis.srespace.tech/events
+  ▼
+DNS Record / Load Balancer / NGINX Reverse Proxy
+  │ TLS termination + security headers + access logs
+  ▼
+Atlantis VM on GCP Compute Engine
+  ├── Atlantis UI: /
+  └── Webhook endpoint: /events
+</pre></div>
+
+  <h3>Lab Access by External IP</h3>
+  <pre><code># Get the Atlantis VM external IP
+export ATLANTIS_VM_NAME="atlantis-server"
+export ATLANTIS_ZONE="us-central1-a"
+
+gcloud compute instances describe "$ATLANTIS_VM_NAME"   --zone "$ATLANTIS_ZONE"   --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
+
+# Lab browser URL only:
+# http://ATLANTIS_EXTERNAL_IP:4141
+
+curl -I "http://ATLANTIS_EXTERNAL_IP:4141"</code></pre>
+
+  <div class="warning"><strong>Security warning:</strong> Do not leave port <code>4141</code> open to the internet in production. Restrict it to office/VPN IP ranges or expose Atlantis through HTTPS on port <code>443</code>.</div>
+
+  <h3>Production DNS + HTTPS Access</h3>
+  <pre><code># Reserve a static GCP IP
+export GCP_PROJECT_ID="your-gcp-project-id"
+export GCP_REGION="us-central1"
+
+gcloud compute addresses create atlantis-static-ip   --project "$GCP_PROJECT_ID"   --region "$GCP_REGION"
+
+gcloud compute addresses describe atlantis-static-ip   --project "$GCP_PROJECT_ID"   --region "$GCP_REGION"   --format='get(address)'
+
+# Create DNS A record:
+# atlantis.srespace.tech  A  STATIC_IP_FROM_ABOVE
+
+nslookup atlantis.srespace.tech
+curl -I https://atlantis.srespace.tech</code></pre>
+
+  <h3>NGINX Reverse Proxy with TLS</h3>
+  <pre><code>sudo apt-get update
+sudo apt-get install -y nginx certbot python3-certbot-nginx
+
+sudo tee /etc/nginx/sites-available/atlantis.srespace.tech >/dev/null &lt;&lt;'EOF'
+server {
+    listen 80;
+    server_name atlantis.srespace.tech;
+
+    location / {
+        proxy_pass http://127.0.0.1:4141;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 20m;
+    }
+}
+EOF
+
+sudo ln -sf /etc/nginx/sites-available/atlantis.srespace.tech /etc/nginx/sites-enabled/atlantis.srespace.tech
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot --nginx -d atlantis.srespace.tech</code></pre>
+
+  <h3>Hardened HTTPS NGINX Config</h3>
+  <pre><code>server {
+    listen 80;
+    server_name atlantis.srespace.tech;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name atlantis.srespace.tech;
+
+    ssl_certificate /etc/letsencrypt/live/atlantis.srespace.tech/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/atlantis.srespace.tech/privkey.pem;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none';" always;
+
+    location / {
+        proxy_pass http://127.0.0.1:4141;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        client_max_body_size 20m;
+    }
+}</code></pre>
+
+  <h3>GitHub Webhook URL</h3>
+  <pre><code>Payload URL:
+https://atlantis.srespace.tech/events
+
+Content type:
+application/json
+
+Secret:
+Same value as ATLANTIS_GH_WEBHOOK_SECRET in GCP Secret Manager
+
+Events:
+- Pull requests
+- Issue comments
+- Pushes</code></pre>
+
+  <h3>Validate GitHub Webhook Delivery</h3>
+  <ol>
+    <li>Open <code>https://github.com/nolet7/multicloud-atlantis-network-security</code>.</li>
+    <li>Go to <strong>Settings → Webhooks</strong>.</li>
+    <li>Open the Atlantis webhook and check <strong>Recent Deliveries</strong>.</li>
+    <li><code>200</code> means GitHub reached Atlantis successfully.</li>
+    <li><code>403</code> usually means webhook secret mismatch.</li>
+    <li><code>404</code> usually means the URL is missing <code>/events</code>.</li>
+    <li>Timeout usually means DNS, firewall, NGINX, TLS, or the Atlantis container is unhealthy.</li>
+  </ol>
+</section>
+
+<section id="enterprise-policy-library">
+  <h2>20. Enterprise-Grade Policy Library</h2>
+  <p>The policy library prevents risky network and security group changes before Atlantis applies them. These policies run against Terraform plan JSON using Conftest/OPA.</p>
+
+  <h3>Policy Folder Structure</h3>
+  <pre><code>policies/
+├── network/
+│   ├── deny-public-ssh.rego
+│   ├── deny-public-rdp.rego
+│   ├── deny-open-admin-ports.rego
+│   ├── require-approved-cidr.rego
+│   └── require-private-subnets.rego
+├── tagging/
+│   ├── require-standard-tags.rego
+│   └── require-valid-environment.rego
+├── encryption/
+│   ├── require-flow-logs.rego
+│   └── require-secret-manager.rego
+└── governance/
+    ├── deny-prod-destroy.rego
+    ├── deny-unapproved-region.rego
+    └── require-owner-cost-center.rego</code></pre>
+
+  <h3>Atlantis Workflow with Policy Check</h3>
+  <pre><code>workflows:
+  secure_multicloud:
+    plan:
+      steps:
+        - init
+        - plan:
+            extra_args: ["-out", "$PLANFILE"]
+        - run: terraform show -json "$PLANFILE" &gt; "$PLANFILE.json"
+        - run: conftest test "$PLANFILE.json" --policy ../../policies
+    apply:
+      steps:
+        - apply</code></pre>
+
+  <h3>Policies and Explanations</h3>
+  <table>
+    <tr><th>Policy</th><th>What It Blocks or Requires</th><th>Why It Matters</th></tr>
+    <tr><td>Deny public SSH</td><td>Blocks port 22 from <code>0.0.0.0/0</code></td><td>Prevents internet-wide SSH brute-force exposure.</td></tr>
+    <tr><td>Deny public RDP</td><td>Blocks port 3389 from <code>0.0.0.0/0</code></td><td>Protects Windows administration access.</td></tr>
+    <tr><td>Deny open admin ports</td><td>Blocks public SSH, RDP, WinRM, Kubernetes API, database, Redis, and Elasticsearch ports</td><td>Prevents high-risk services becoming public attack surfaces.</td></tr>
+    <tr><td>Require approved CIDRs</td><td>Allows ingress only from corporate, VPN, monitoring, or bastion CIDRs</td><td>Reduces accidental exposure.</td></tr>
+    <tr><td>Require standard tags/labels</td><td>Requires Project, Environment, Owner, CostCenter, and ManagedBy</td><td>Supports audit, ownership, cleanup, and chargeback.</td></tr>
+    <tr><td>Require valid environment</td><td>Allows only dev, stage, and prod</td><td>Prevents unmanaged environment sprawl.</td></tr>
+    <tr><td>Deny production destroy</td><td>Blocks deletion of prod resources</td><td>Prevents accidental production outages.</td></tr>
+    <tr><td>Deny unapproved regions</td><td>Blocks deployment outside approved regions</td><td>Supports compliance, latency, and cost governance.</td></tr>
+    <tr><td>Require flow logs</td><td>Requires network telemetry resources</td><td>Supports threat investigation, audit, and traffic analysis.</td></tr>
+    <tr><td>Deny hardcoded secrets</td><td>Blocks secret-like values in Terraform resources</td><td>Reduces risk of credential leakage.</td></tr>
+    <tr><td>Require managed secret store</td><td>Requires GCP Secret Manager, AWS Secrets Manager, or Azure Key Vault</td><td>Keeps secrets out of Git and Terraform files.</td></tr>
+    <tr><td>Require owner and cost center</td><td>Requires accountability metadata</td><td>Improves operational ownership and FinOps reporting.</td></tr>
+  </table>
+
+  <h3>Example OPA Policy Bundle</h3>
+  <pre><code>package main
+
+admin_ports := {22, 3389, 5985, 5986, 6443, 5432, 3306, 6379, 9200, 9300}
+valid_envs := {"dev", "stage", "prod"}
+approved_regions := {"us-east-1", "us-west-2", "eastus", "centralus", "us-central1", "us-east1"}
+required_tags := {"Project", "Environment", "Owner", "CostCenter", "ManagedBy"}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  rc.type == "aws_security_group_rule"
+  rc.change.after.type == "ingress"
+  rc.change.after.cidr_blocks[_] == "0.0.0.0/0"
+  port := admin_ports[_]
+  rc.change.after.from_port &lt;= port
+  rc.change.after.to_port &gt;= port
+  msg := sprintf("Admin port %v cannot be open to the internet: %s", [port, rc.address])
+}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  rc.type == "google_compute_firewall"
+  rc.change.after.source_ranges[_] == "0.0.0.0/0"
+  allow := rc.change.after.allow[_]
+  allow.ports[_] == "22"
+  msg := sprintf("Public SSH is not allowed in GCP firewall: %s", [rc.address])
+}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  startswith(rc.type, "aws_")
+  tags := object.get(rc.change.after, "tags", {})
+  required := required_tags[_]
+  not tags[required]
+  msg := sprintf("Missing required AWS tag %s on %s", [required, rc.address])
+}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  startswith(rc.type, "azurerm_")
+  tags := object.get(rc.change.after, "tags", {})
+  required := required_tags[_]
+  not tags[required]
+  msg := sprintf("Missing required Azure tag %s on %s", [required, rc.address])
+}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  tags := object.get(rc.change.after, "tags", {})
+  env := tags["Environment"]
+  env != ""
+  not valid_envs[env]
+  msg := sprintf("Invalid Environment tag %s on %s", [env, rc.address])
+}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  rc.change.actions[_] == "delete"
+  tags := object.get(rc.change.before, "tags", {})
+  tags["Environment"] == "prod"
+  msg := sprintf("Production destroy is blocked: %s", [rc.address])
+}
+
+deny[msg] {
+  rc := input.resource_changes[_]
+  region := object.get(rc.change.after, "region", "")
+  region != ""
+  not approved_regions[region]
+  msg := sprintf("Region %s is not approved for %s", [region, rc.address])
+}</code></pre>
+</section>
+
+<section id="security-measures-explained">
+  <h2>21. Security Measures Explained</h2>
+  <table>
+    <tr><th>Security Measure</th><th>What It Protects</th><th>How It Works in This Project</th></tr>
+    <tr><td>Pull-request workflow</td><td>Prevents unreviewed infrastructure changes</td><td>All Terraform plans and applies happen from GitHub PRs through Atlantis.</td></tr>
+    <tr><td>Atlantis apply requirements</td><td>Prevents premature production applies</td><td><code>approved</code>, <code>mergeable</code>, and <code>undiverged</code> are required before apply.</td></tr>
+    <tr><td>Webhook secret</td><td>Prevents fake webhook requests</td><td>GitHub and Atlantis share a secret stored in GCP Secret Manager.</td></tr>
+    <tr><td>HTTPS/TLS</td><td>Protects traffic between GitHub/users and Atlantis</td><td>NGINX terminates TLS using a valid certificate.</td></tr>
+    <tr><td>Security headers</td><td>Reduces browser-based attacks</td><td>NGINX sets HSTS, CSP, X-Frame-Options, nosniff, and CSP headers.</td></tr>
+    <tr><td>Firewall allowlist</td><td>Reduces public attack surface</td><td>Only approved IP ranges can reach Atlantis UI or VM SSH.</td></tr>
+    <tr><td>Least-privilege IAM</td><td>Limits blast radius if Atlantis is compromised</td><td>Atlantis gets only the permissions needed for network/security resources.</td></tr>
+    <tr><td>Cloud secret managers</td><td>Protects tokens and credentials</td><td>GCP Secret Manager, AWS Secrets Manager, and Azure Key Vault hold secrets instead of repo files.</td></tr>
+    <tr><td>OPA/Conftest policies</td><td>Blocks risky Terraform plans</td><td>Policies deny public admin ports, invalid regions, missing tags, prod destroy, and hardcoded secrets.</td></tr>
+    <tr><td>Checkov/TFLint</td><td>Finds IaC misconfiguration early</td><td>GitHub Actions and Atlantis workflow can scan Terraform before apply.</td></tr>
+    <tr><td>Remote state locking</td><td>Prevents concurrent Terraform corruption</td><td>S3+DynamoDB, Azure Storage, or GCS backend locking protects state.</td></tr>
+    <tr><td>Branch protection</td><td>Protects main branch integrity</td><td>Main requires PR review, passing checks, and restricted push permissions.</td></tr>
+    <tr><td>Audit logs</td><td>Supports compliance evidence</td><td>GitHub PR comments, Atlantis logs, cloud audit logs, and NGINX logs show who changed what and when.</td></tr>
+    <tr><td>Environment separation</td><td>Prevents dev changes from impacting prod</td><td>Separate Atlantis projects and variable files exist for <code>dev</code>, <code>stage</code>, and <code>prod</code>.</td></tr>
+    <tr><td>Production destroy guardrail</td><td>Protects critical infrastructure</td><td>OPA blocks prod deletes unless a break-glass workflow is used.</td></tr>
+  </table>
+
+  <h3>Enterprise Branch Protection Settings</h3>
+  <pre><code>Repository: nolet7/multicloud-atlantis-network-security
+Branch: main
+
+Required settings:
+- Require a pull request before merging
+- Require at least 2 approvals for prod-impacting changes
+- Require review from CODEOWNERS
+- Require status checks to pass
+- Require branches to be up to date before merging
+- Require signed commits where possible
+- Restrict who can push to main
+- Do not allow force pushes
+- Do not allow deletions
+
+Recommended CODEOWNERS:
+/envs/prod/      @platform-admins @security-engineering
+/policies/       @security-engineering
+/modules/        @platform-engineering
+/atlantis.yaml   @platform-admins</code></pre>
+
+  <h3>Operational Validation Checklist</h3>
+  <pre><code># Atlantis service health
+curl -I https://atlantis.srespace.tech
+
+# Webhook endpoint should exist for GitHub POST events
+curl -I https://atlantis.srespace.tech/events
+
+# Check Atlantis container
+sudo docker ps --filter name=atlantis
+sudo docker logs --tail 100 atlantis
+
+# Check NGINX logs
+sudo tail -100 /var/log/nginx/atlantis_access.log
+sudo tail -100 /var/log/nginx/atlantis_error.log
+
+# Check GCP firewall rule
+gcloud compute firewall-rules list --filter="name~atlantis"
+
+# Confirm Atlantis secrets exist without printing secret values
+gcloud secrets list --filter="name~atlantis"</code></pre>
+</section>
+
+</main>
+</div>
+<footer>
+  Multi-Cloud Terraform + Atlantis + Cloud Security Manager Project Guide • Generated for enterprise SRE/Platform Engineering practice
+</footer>
+</body>
+</html>

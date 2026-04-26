@@ -11,12 +11,10 @@ projects:
       when_modified:
         - "*.tf"
         - "*.tfvars"
-        - "*.tfvars.example"
+        - "../../../policies/**/*.rego"
     apply_requirements:
       - approved
       - mergeable
-      - undiverged
-    workflow: secure
 
   - name: azure-network-security
     dir: live/azure/network-security
@@ -26,12 +24,10 @@ projects:
       when_modified:
         - "*.tf"
         - "*.tfvars"
-        - "*.tfvars.example"
+        - "../../../policies/**/*.rego"
     apply_requirements:
       - approved
       - mergeable
-      - undiverged
-    workflow: secure
 
   - name: gcp-network-security
     dir: live/gcp/network-security
@@ -41,21 +37,43 @@ projects:
       when_modified:
         - "*.tf"
         - "*.tfvars"
-        - "*.tfvars.example"
+        - "../../../policies/**/*.rego"
     apply_requirements:
       - approved
       - mergeable
-      - undiverged
-    workflow: secure
 
-workflows:
-  secure:
-    plan:
-      steps:
-        - run: terraform fmt -check -recursive
-        - init
-        - run: terraform validate
-        - plan
-    apply:
-      steps:
-        - apply
+  - name: aws-security-manager
+    dir: live/security-managers/aws
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+    apply_requirements:
+      - approved
+      - mergeable
+
+  - name: azure-security-manager
+    dir: live/security-managers/azure
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+    apply_requirements:
+      - approved
+      - mergeable
+
+  - name: gcp-security-manager
+    dir: live/security-managers/gcp
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+    apply_requirements:
+      - approved
+      - mergeable

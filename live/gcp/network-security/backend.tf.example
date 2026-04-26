@@ -1,0 +1,6 @@
+terraform {
+  backend "gcs" {
+    bucket = "olalat-terraform-state"
+    prefix = "gcp/network-security"
+  }
+}

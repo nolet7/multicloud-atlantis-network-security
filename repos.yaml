@@ -1,24 +1,6 @@
 repos:
-  - id: github.com/your-org/multicloud-atlantis-network-security
+  - id: github.com/nolet7/multicloud-atlantis-network-security
     branch: /main/
-    apply_requirements:
-      - approved
-      - mergeable
-      - undiverged
-    allowed_overrides:
-      - workflow
-      - apply_requirements
-      - autoplan
+    apply_requirements: [approved, mergeable, undiverged]
+    allowed_overrides: [workflow, apply_requirements, autoplan]
     allow_custom_workflows: false
-workflows:
-  policy_checked:
-    plan:
-      steps:
-        - init
-        - plan
-        - show
-        - run: terraform show -json $PLANFILE > $PLANFILE.json
-        - run: conftest test $PLANFILE.json --policy $REPO_REL_DIR/../../../policies/opa
-    apply:
-      steps:
-        - apply

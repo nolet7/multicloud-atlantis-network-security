@@ -1,0 +1,9 @@
+terraform {
+  backend "s3" {
+    bucket         = "olalat-terraform-state"
+    key            = "aws/network-security/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "olalat-terraform-locks"
+    encrypt        = true
+  }
+}
