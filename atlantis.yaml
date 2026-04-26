@@ -1,0 +1,61 @@
+version: 3
+parallel_plan: true
+parallel_apply: false
+
+projects:
+  - name: aws-network-security
+    dir: live/aws/network-security
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "*.tfvars.example"
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged
+    workflow: secure
+
+  - name: azure-network-security
+    dir: live/azure/network-security
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "*.tfvars.example"
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged
+    workflow: secure
+
+  - name: gcp-network-security
+    dir: live/gcp/network-security
+    workspace: default
+    autoplan:
+      enabled: true
+      when_modified:
+        - "*.tf"
+        - "*.tfvars"
+        - "*.tfvars.example"
+    apply_requirements:
+      - approved
+      - mergeable
+      - undiverged
+    workflow: secure
+
+workflows:
+  secure:
+    plan:
+      steps:
+        - run: terraform fmt -check -recursive
+        - init
+        - run: terraform validate
+        - plan
+    apply:
+      steps:
+        - apply

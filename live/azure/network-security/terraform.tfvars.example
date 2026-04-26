@@ -1,0 +1,7 @@
+project_name         = "enterprise-multicloud"
+environment          = "dev"
+owner                = "platform-engineering"
+location             = "eastus"
+vnet_cidr            = "10.20.0.0/16"
+subnet_cidr          = "10.20.1.0/24"
+allowed_ingress_cidr = "203.0.113.10/32"

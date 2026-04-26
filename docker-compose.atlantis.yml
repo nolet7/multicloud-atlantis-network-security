@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  atlantis:
+    image: ghcr.io/runatlantis/atlantis:latest
+    container_name: atlantis
+    restart: unless-stopped
+    ports:
+      - "4141:4141"
+    env_file:
+      - .env
+    command:
+      - server
+      - --gh-user=${ATLANTIS_GH_USER}
+      - --gh-token=${ATLANTIS_GH_TOKEN}
+      - --gh-webhook-secret=${ATLANTIS_GH_WEBHOOK_SECRET}
+      - --repo-allowlist=${ATLANTIS_REPO_ALLOWLIST}
+      - --atlantis-url=${ATLANTIS_ATLANTIS_URL}
+      - --repo-config=/etc/atlantis/repos.yaml
+      - --log-level=info
+    volumes:
+      - ./repos.yaml:/etc/atlantis/repos.yaml:ro
+      - atlantis-data:/home/atlantis
+
+volumes:
+  atlantis-data:

@@ -1,0 +1,11 @@
+# Platform team owns Terraform code
+/live/ @your-org/platform-engineering
+
+# Security team reviews network/security changes
+/live/aws/network-security/ @your-org/security-engineering
+/live/azure/network-security/ @your-org/security-engineering
+/live/gcp/network-security/ @your-org/security-engineering
+
+# Atlantis config requires platform ownership
+/atlantis.yaml @your-org/platform-engineering
+/repos.yaml @your-org/platform-engineering
